@@ -1,11 +1,36 @@
 <script lang="ts">
   import { treeStore } from '$lib/stores/tree';
   import { editorStore } from '$lib/stores/editor';
+  import Section from './inspector/Section.svelte';
+  import NumberInput from './inspector/NumberInput.svelte';
+  import SelectInput from './inspector/SelectInput.svelte';
 
-  // Local state for property values
+  // Crown shape options
+  const crownShapeOptions = [
+    { value: 'spherical', label: 'Spherical' },
+    { value: 'conical', label: 'Conical' },
+    { value: 'hemispherical', label: 'Hemispherical' },
+    { value: 'flame', label: 'Flame' },
+    { value: 'columnar', label: 'Columnar' }
+  ];
+
+  // Leaf geometry options
+  const leafGeometryOptions = [
+    { value: 'polygon', label: 'Polygon' },
+    { value: 'cross_billboard', label: 'Cross Billboard' },
+    { value: 'billboard', label: 'Billboard' },
+    { value: 'none', label: 'None' }
+  ];
+
+  // Local state for seed input
   let seed = 12345;
-
   $: seed = $treeStore.seed;
+
+  // Species inputs
+  let speciesName = '';
+  let scientificName = '';
+  $: speciesName = $treeStore.params.name;
+  $: scientificName = $treeStore.params.scientificName;
 
   function updateSeed() {
     treeStore.setSeed(seed);
@@ -13,46 +38,332 @@
       treeStore.regenerate();
     }
   }
+
+  function handleRegenerate() {
+    treeStore.regenerate();
+  }
+
+  function handleRandomize() {
+    treeStore.randomizeSeed();
+    treeStore.regenerate();
+  }
+
+  function updateSpeciesName() {
+    treeStore.setSpeciesName(speciesName);
+  }
+
+  function updateScientificName() {
+    treeStore.setScientificName(scientificName);
+  }
+
+  // Handler helper for auto-regenerate
+  function withAutoRegenerate(updateFn: () => void) {
+    return () => {
+      updateFn();
+      if ($editorStore.autoRegenerate) {
+        treeStore.regenerate();
+      }
+    };
+  }
 </script>
 
 <div class="inspector">
-  <div class="section">
-    <div class="section-header">
-      <h3>Tree Properties</h3>
-    </div>
-
-    <div class="property">
-      <label for="species">Species</label>
+  <!-- Species Section -->
+  <Section title="Species">
+    <div class="text-input">
+      <label for="species-name">Name</label>
       <input
-        id="species"
+        id="species-name"
         type="text"
-        value={$treeStore.species || 'No species loaded'}
-        disabled
+        bind:value={speciesName}
+        on:change={updateSpeciesName}
       />
     </div>
+    <div class="text-input">
+      <label for="scientific-name">Scientific Name</label>
+      <input
+        id="scientific-name"
+        type="text"
+        bind:value={scientificName}
+        on:change={updateScientificName}
+        class="italic"
+      />
+    </div>
+  </Section>
 
-    <div class="property">
-      <label for="seed">Seed</label>
+  <!-- Trunk Section -->
+  <Section title="Trunk">
+    <NumberInput
+      label="Height"
+      value={$treeStore.params.trunk.height}
+      min={0.5}
+      max={20}
+      step={0.1}
+      on:change={(e) => {
+        treeStore.updateTrunk('height', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Radius"
+      value={$treeStore.params.trunk.radius}
+      min={0.05}
+      max={2}
+      step={0.01}
+      on:change={(e) => {
+        treeStore.updateTrunk('radius', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Taper"
+      value={$treeStore.params.trunk.taper}
+      min={0}
+      max={1}
+      step={0.01}
+      on:change={(e) => {
+        treeStore.updateTrunk('taper', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Curve"
+      value={$treeStore.params.trunk.curve}
+      min={0}
+      max={90}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateTrunk('curve', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Segments"
+      value={$treeStore.params.trunk.segments}
+      min={3}
+      max={16}
+      step={1}
+      showSlider={false}
+      on:change={(e) => {
+        treeStore.updateTrunk('segments', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+  </Section>
+
+  <!-- Branches Level 1 Section -->
+  <Section title="Branches Level 1">
+    <NumberInput
+      label="Count"
+      value={$treeStore.params.branches.level1.count}
+      min={0}
+      max={20}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel1('count', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Length"
+      value={$treeStore.params.branches.level1.length}
+      min={0.1}
+      max={10}
+      step={0.1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel1('length', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Angle"
+      value={$treeStore.params.branches.level1.angle}
+      min={0}
+      max={90}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel1('angle', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Rotation"
+      value={$treeStore.params.branches.level1.rotation}
+      min={0}
+      max={360}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel1('rotation', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Gravity"
+      value={$treeStore.params.branches.level1.gravity}
+      min={-1}
+      max={1}
+      step={0.01}
+      on:change={(e) => {
+        treeStore.updateBranchLevel1('gravity', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+  </Section>
+
+  <!-- Branches Level 2 Section -->
+  <Section title="Branches Level 2" expanded={false}>
+    <NumberInput
+      label="Count"
+      value={$treeStore.params.branches.level2.count}
+      min={0}
+      max={20}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel2('count', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Length"
+      value={$treeStore.params.branches.level2.length}
+      min={0.1}
+      max={10}
+      step={0.1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel2('length', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Angle"
+      value={$treeStore.params.branches.level2.angle}
+      min={0}
+      max={90}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel2('angle', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Rotation"
+      value={$treeStore.params.branches.level2.rotation}
+      min={0}
+      max={360}
+      step={1}
+      on:change={(e) => {
+        treeStore.updateBranchLevel2('rotation', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Gravity"
+      value={$treeStore.params.branches.level2.gravity}
+      min={-1}
+      max={1}
+      step={0.01}
+      on:change={(e) => {
+        treeStore.updateBranchLevel2('gravity', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+  </Section>
+
+  <!-- Crown Section -->
+  <Section title="Crown">
+    <SelectInput
+      label="Shape"
+      value={$treeStore.params.crown.shape}
+      options={crownShapeOptions}
+      on:change={(e) => {
+        treeStore.updateCrown('shape', e.detail as any);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Offset"
+      value={$treeStore.params.crown.offset}
+      min={0}
+      max={1}
+      step={0.01}
+      on:change={(e) => {
+        treeStore.updateCrown('offset', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+  </Section>
+
+  <!-- Leaves Section -->
+  <Section title="Leaves">
+    <NumberInput
+      label="Count"
+      value={$treeStore.params.leaves.count}
+      min={0}
+      max={10000}
+      step={100}
+      on:change={(e) => {
+        treeStore.updateLeaves('count', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <NumberInput
+      label="Size"
+      value={$treeStore.params.leaves.size}
+      min={0.01}
+      max={0.5}
+      step={0.01}
+      on:change={(e) => {
+        treeStore.updateLeaves('size', e.detail);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+    <SelectInput
+      label="Geometry"
+      value={$treeStore.params.leaves.geometry}
+      options={leafGeometryOptions}
+      on:change={(e) => {
+        treeStore.updateLeaves('geometry', e.detail as any);
+        if ($editorStore.autoRegenerate) treeStore.regenerate();
+      }}
+    />
+  </Section>
+
+  <!-- Generation Section -->
+  <Section title="Generation">
+    <div class="seed-row">
       <div class="seed-input">
+        <label for="seed">Seed</label>
         <input
           id="seed"
           type="number"
           bind:value={seed}
           on:change={updateSeed}
         />
-        <button on:click={() => { treeStore.randomizeSeed(); treeStore.regenerate(); }}>
-          Rand
-        </button>
       </div>
+      <button class="btn-small" on:click={handleRandomize} title="Randomize Seed">
+        Rand
+      </button>
     </div>
-  </div>
-
-  <div class="section">
-    <div class="section-header">
-      <h3>View Options</h3>
+    <div class="regenerate-row">
+      <button class="btn-primary" on:click={handleRegenerate}>
+        Regenerate Tree
+      </button>
     </div>
+    <div class="auto-regenerate">
+      <label>
+        <input
+          type="checkbox"
+          checked={$editorStore.autoRegenerate}
+          on:change={editorStore.toggleAutoRegenerate}
+        />
+        Auto-regenerate on change
+      </label>
+    </div>
+  </Section>
 
-    <div class="property checkbox">
+  <!-- View Options Section -->
+  <Section title="View Options" expanded={false}>
+    <div class="checkbox-row">
       <label>
         <input
           type="checkbox"
@@ -62,8 +373,7 @@
         Show Wireframe
       </label>
     </div>
-
-    <div class="property checkbox">
+    <div class="checkbox-row">
       <label>
         <input
           type="checkbox"
@@ -73,42 +383,10 @@
         Show Normals
       </label>
     </div>
+  </Section>
 
-    <div class="property checkbox">
-      <label>
-        <input
-          type="checkbox"
-          checked={$editorStore.autoRegenerate}
-          on:change={editorStore.toggleAutoRegenerate}
-        />
-        Auto Regenerate
-      </label>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-header">
-      <h3>Selected Node</h3>
-    </div>
-
-    {#if $editorStore.selectedNode}
-      <div class="property">
-        <label>Node ID</label>
-        <input type="text" value={$editorStore.selectedNode} disabled />
-      </div>
-
-      <!-- Node-specific properties would go here -->
-      <p class="hint">Select a node to edit its properties</p>
-    {:else}
-      <p class="hint">No node selected</p>
-    {/if}
-  </div>
-
-  <div class="section">
-    <div class="section-header">
-      <h3>Statistics</h3>
-    </div>
-
+  <!-- Statistics Section -->
+  <Section title="Statistics" expanded={false}>
     <div class="stats">
       <div class="stat">
         <span class="stat-label">Vertices</span>
@@ -127,7 +405,7 @@
         <span class="stat-value">--</span>
       </div>
     </div>
-  </div>
+  </Section>
 </div>
 
 <style>
@@ -135,73 +413,133 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow-y: auto;
   }
 
-  .section {
-    border-bottom: 1px solid var(--border);
-  }
-
-  .section-header {
-    padding: 0.75rem 1rem;
-    background: var(--bg-tertiary);
-  }
-
-  .section-header h3 {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .property {
-    padding: 0.5rem 1rem;
+  .text-input {
+    padding: 0.375rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
 
-  .property label {
+  .text-input label {
     font-size: 0.75rem;
     color: var(--text-secondary);
   }
 
-  .property input[type="text"],
-  .property input[type="number"] {
+  .text-input input {
     width: 100%;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
   }
 
-  .property.checkbox {
-    flex-direction: row;
+  .text-input input:focus {
+    outline: none;
+    border-color: var(--accent);
   }
 
-  .property.checkbox label {
+  .text-input input.italic {
+    font-style: italic;
+  }
+
+  .seed-row {
+    padding: 0.375rem 1rem;
     display: flex;
-    align-items: center;
     gap: 0.5rem;
-    font-size: 0.875rem;
+    align-items: flex-end;
+  }
+
+  .seed-input {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .seed-input label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .seed-input input {
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+  }
+
+  .seed-input input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btn-small {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
     color: var(--text-primary);
     cursor: pointer;
   }
 
-  .seed-input {
-    display: flex;
-    gap: 0.5rem;
+  .btn-small:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
   }
 
-  .seed-input input {
-    flex: 1;
+  .regenerate-row {
+    padding: 0.5rem 1rem;
   }
 
-  .seed-input button {
-    padding: 0.375rem 0.75rem;
-  }
-
-  .hint {
+  .btn-primary {
+    width: 100%;
     padding: 0.5rem 1rem;
     font-size: 0.8125rem;
+    font-weight: 500;
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    color: var(--bg-primary);
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+
+  .auto-regenerate {
+    padding: 0.375rem 1rem;
+  }
+
+  .auto-regenerate label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
-    font-style: italic;
+    cursor: pointer;
+  }
+
+  .checkbox-row {
+    padding: 0.375rem 1rem;
+  }
+
+  .checkbox-row label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    cursor: pointer;
   }
 
   .stats {

@@ -1,12 +1,92 @@
 import { writable, derived } from 'svelte/store';
 
+export interface BranchParams {
+  count: number;
+  length: number;
+  angle: number;
+  rotation: number;
+  gravity: number;
+}
+
+export interface TreeParams {
+  // Species
+  name: string;
+  scientificName: string;
+
+  // Trunk
+  trunk: {
+    height: number;
+    radius: number;
+    taper: number;
+    curve: number;
+    segments: number;
+  };
+
+  // Branches
+  branches: {
+    level1: BranchParams;
+    level2: BranchParams;
+  };
+
+  // Crown
+  crown: {
+    shape: 'spherical' | 'conical' | 'hemispherical' | 'flame' | 'columnar';
+    offset: number;
+  };
+
+  // Leaves
+  leaves: {
+    count: number;
+    size: number;
+    geometry: 'polygon' | 'cross_billboard' | 'billboard' | 'none';
+  };
+}
+
 interface TreeState {
   species: string;
   seed: number;
   meshData: any | null;
   loading: boolean;
   error: string | null;
+  params: TreeParams;
 }
+
+const defaultParams: TreeParams = {
+  name: 'Oak',
+  scientificName: 'Quercus robur',
+  trunk: {
+    height: 5,
+    radius: 0.3,
+    taper: 0.7,
+    curve: 15,
+    segments: 8
+  },
+  branches: {
+    level1: {
+      count: 5,
+      length: 3,
+      angle: 45,
+      rotation: 137,
+      gravity: 0.2
+    },
+    level2: {
+      count: 3,
+      length: 1.5,
+      angle: 30,
+      rotation: 90,
+      gravity: 0.3
+    }
+  },
+  crown: {
+    shape: 'spherical',
+    offset: 0.6
+  },
+  leaves: {
+    count: 5000,
+    size: 0.1,
+    geometry: 'cross_billboard'
+  }
+};
 
 function createTreeStore() {
   const { subscribe, set, update } = writable<TreeState>({
@@ -14,7 +94,8 @@ function createTreeStore() {
     seed: 12345,
     meshData: null,
     loading: false,
-    error: null
+    error: null,
+    params: { ...defaultParams }
   });
 
   let generator: any = null;
@@ -72,6 +153,86 @@ function createTreeStore() {
 
     randomizeSeed() {
       update(s => ({ ...s, seed: Math.floor(Math.random() * 2147483647) }));
+    },
+
+    // Parameter update methods
+    updateParam<K extends keyof TreeParams>(key: K, value: TreeParams[K]) {
+      update(s => ({
+        ...s,
+        params: { ...s.params, [key]: value }
+      }));
+    },
+
+    updateTrunk<K extends keyof TreeParams['trunk']>(key: K, value: TreeParams['trunk'][K]) {
+      update(s => ({
+        ...s,
+        params: {
+          ...s.params,
+          trunk: { ...s.params.trunk, [key]: value }
+        }
+      }));
+    },
+
+    updateBranchLevel1<K extends keyof BranchParams>(key: K, value: BranchParams[K]) {
+      update(s => ({
+        ...s,
+        params: {
+          ...s.params,
+          branches: {
+            ...s.params.branches,
+            level1: { ...s.params.branches.level1, [key]: value }
+          }
+        }
+      }));
+    },
+
+    updateBranchLevel2<K extends keyof BranchParams>(key: K, value: BranchParams[K]) {
+      update(s => ({
+        ...s,
+        params: {
+          ...s.params,
+          branches: {
+            ...s.params.branches,
+            level2: { ...s.params.branches.level2, [key]: value }
+          }
+        }
+      }));
+    },
+
+    updateCrown<K extends keyof TreeParams['crown']>(key: K, value: TreeParams['crown'][K]) {
+      update(s => ({
+        ...s,
+        params: {
+          ...s.params,
+          crown: { ...s.params.crown, [key]: value }
+        }
+      }));
+    },
+
+    updateLeaves<K extends keyof TreeParams['leaves']>(key: K, value: TreeParams['leaves'][K]) {
+      update(s => ({
+        ...s,
+        params: {
+          ...s.params,
+          leaves: { ...s.params.leaves, [key]: value }
+        }
+      }));
+    },
+
+    // Set species name and scientific name
+    setSpeciesName(name: string) {
+      update(s => ({
+        ...s,
+        species: name,
+        params: { ...s.params, name }
+      }));
+    },
+
+    setScientificName(scientificName: string) {
+      update(s => ({
+        ...s,
+        params: { ...s.params, scientificName }
+      }));
     }
   };
 }
