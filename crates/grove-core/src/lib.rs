@@ -30,12 +30,16 @@
 pub mod constants;
 pub mod generation;
 pub mod math;
+pub mod mesh;
+pub mod mesh_builder;
 pub mod rng;
 pub mod species;
 pub mod tree;
 
 pub use constants::*;
 pub use generation::generate_tree;
+pub use mesh::{MaterialType, Mesh, Submesh, Vertex};
+pub use mesh_builder::{build_mesh, build_mesh_with_config, MeshBuilder, MeshConfig};
 pub use rng::Rng;
 pub use species::Species;
 pub use tree::{BoundingBox, Leaf, Segment, Stem, Tree};
@@ -110,6 +114,77 @@ length = 2.0
             assert_eq!(s1.id, s2.id);
             assert_eq!(s1.level, s2.level);
             assert_eq!(s1.segments.len(), s2.segments.len());
+        }
+    }
+
+    #[test]
+    fn test_mesh_generation_integration() {
+        let toml = r#"
+[species]
+name = "Mesh Test Oak"
+
+[trunk]
+height = 6.0
+radius = 0.45
+segments = 4
+
+[branches.level1]
+count = 5
+length = 3.0
+segments = 3
+"#;
+
+        let species = Species::from_toml(toml).unwrap();
+        let tree = generate_tree(&species, 42);
+
+        // Generate mesh with default config
+        let mesh = build_mesh(&tree);
+
+        // Verify mesh was generated
+        assert!(!mesh.is_empty(), "Mesh should not be empty");
+        assert!(mesh.vertex_count() > 0, "Should have vertices");
+        assert!(mesh.triangle_count() > 0, "Should have triangles");
+
+        // Verify submesh
+        assert_eq!(mesh.submeshes.len(), 1, "Should have one submesh");
+        assert_eq!(mesh.submeshes[0].material, MaterialType::Bark);
+
+        // Verify Pivot Painter data was encoded
+        for vertex in &mesh.vertices {
+            // UV2.x (depth) should be valid
+            assert!(vertex.uv2.x >= 0.0 && vertex.uv2.x <= 1.0);
+        }
+    }
+
+    #[test]
+    fn test_mesh_config_customization() {
+        let toml = r#"
+[species]
+name = "Config Test"
+
+[trunk]
+height = 4.0
+radius = 0.3
+"#;
+
+        let species = Species::from_toml(toml).unwrap();
+        let tree = generate_tree(&species, 123);
+
+        // Generate mesh with custom config
+        let config = MeshConfig {
+            ring_resolution: [8, 6, 4, 3],
+            texture_v_scale: 2.0,
+            pivot_painter: false,
+        };
+        let mesh = build_mesh_with_config(&tree, config);
+
+        // Verify mesh was generated
+        assert!(!mesh.is_empty());
+
+        // Verify pivot painter data is NOT encoded (disabled in config)
+        for vertex in &mesh.vertices {
+            assert_eq!(vertex.uv2, glam::Vec2::ZERO);
+            assert_eq!(vertex.color, glam::Vec4::ZERO);
         }
     }
 }
