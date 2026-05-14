@@ -64,6 +64,34 @@ impl<'a> MeshBuilder<'a> {
         self.mesh
     }
 
+
+    /// Build branches up to max_level depth
+    ///
+    /// This is useful for LOD generation where lower LOD levels
+    /// should exclude smaller branches.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_level` - Maximum branch level to include (0 = trunk only, 1 = trunk + primary branches, etc.)
+    pub fn build_branches_to_level(mut self, max_level: u32) -> Mesh {
+        for stem in &self.tree.stems {
+            if stem.level as u32 <= max_level {
+                self.build_stem(stem);
+            }
+        }
+
+        // Add bark submesh for all branch geometry
+        if !self.mesh.indices.is_empty() {
+            self.mesh.submeshes.push(Submesh {
+                index_start: 0,
+                index_count: self.mesh.indices.len() as u32,
+                material: MaterialType::Bark,
+            });
+        }
+
+        self.mesh
+    }
+
     fn build_stem(&mut self, stem: &Stem) {
         if stem.segments.is_empty() {
             return;
@@ -539,6 +567,101 @@ mod tests {
             "V scale not applied correctly: {} vs {}",
             max_v1,
             max_v2
+        );
+    }
+
+    fn create_tree_with_multiple_levels() -> Tree {
+        let mut tree = Tree::new("Test".to_string(), 42);
+
+        // Create trunk (level 0)
+        let mut trunk = Stem::new(0, 0);
+        trunk.segments.push(Segment {
+            start: Vec3::ZERO,
+            end: Vec3::new(0.0, 4.0, 0.0),
+            start_radius: 0.5,
+            end_radius: 0.3,
+            direction: Vec3::Y,
+        });
+        trunk.child_ids.push(1);
+        tree.add_stem(trunk);
+
+        // Create level 1 branch
+        let mut branch1 = Stem::new(1, 1);
+        branch1.parent_id = Some(0);
+        branch1.parent_offset = 0.5;
+        branch1.segments.push(Segment {
+            start: Vec3::new(0.0, 2.0, 0.0),
+            end: Vec3::new(1.5, 2.5, 0.0),
+            start_radius: 0.15,
+            end_radius: 0.1,
+            direction: Vec3::new(1.0, 0.3, 0.0).normalize(),
+        });
+        branch1.child_ids.push(2);
+        tree.add_stem(branch1);
+
+        // Create level 2 branch
+        let mut branch2 = Stem::new(2, 2);
+        branch2.parent_id = Some(1);
+        branch2.parent_offset = 0.7;
+        branch2.segments.push(Segment {
+            start: Vec3::new(1.0, 2.35, 0.0),
+            end: Vec3::new(1.5, 2.8, 0.3),
+            start_radius: 0.05,
+            end_radius: 0.03,
+            direction: Vec3::new(0.5, 0.5, 0.3).normalize(),
+        });
+        tree.add_stem(branch2);
+
+        tree.update_bounds();
+        tree
+    }
+
+    #[test]
+    fn test_build_branches_to_level() {
+        let tree = create_tree_with_multiple_levels();
+
+        // Build with all levels
+        let config = MeshConfig::default();
+        let mesh_all = MeshBuilder::new(&tree, config.clone()).build_branches();
+
+        // Build with trunk only (level 0)
+        let mesh_trunk = MeshBuilder::new(&tree, config.clone()).build_branches_to_level(0);
+
+        // Build with trunk + level 1
+        let mesh_level1 = MeshBuilder::new(&tree, config.clone()).build_branches_to_level(1);
+
+        // Trunk only should have fewer vertices than trunk + level 1
+        assert!(
+            mesh_trunk.vertex_count() < mesh_level1.vertex_count(),
+            "Trunk only ({}) should have fewer vertices than trunk + level 1 ({})",
+            mesh_trunk.vertex_count(),
+            mesh_level1.vertex_count()
+        );
+
+        // Level 1 should have fewer vertices than all levels
+        assert!(
+            mesh_level1.vertex_count() < mesh_all.vertex_count(),
+            "Trunk + level 1 ({}) should have fewer vertices than all ({})",
+            mesh_level1.vertex_count(),
+            mesh_all.vertex_count()
+        );
+    }
+
+    #[test]
+    fn test_build_branches_to_level_high_limit() {
+        let tree = create_tree_with_multiple_levels();
+        let config = MeshConfig::default();
+
+        // Build with max_level higher than any branch level in tree
+        let mesh_high = MeshBuilder::new(&tree, config.clone()).build_branches_to_level(10);
+
+        // Should be the same as building all branches
+        let mesh_all = MeshBuilder::new(&tree, config).build_branches();
+
+        assert_eq!(
+            mesh_high.vertex_count(),
+            mesh_all.vertex_count(),
+            "High limit should include all branches"
         );
     }
 }
