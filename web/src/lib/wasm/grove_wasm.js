@@ -18,6 +18,20 @@ export class GroveGenerator {
         wasm.__wbg_grovegenerator_free(ptr, 0);
     }
     /**
+     * Export tree as GLB binary data.
+     *
+     * Returns a Uint8Array containing the complete GLB file.
+     * @param {bigint} seed
+     * @returns {Uint8Array}
+     */
+    export_glb(seed) {
+        const ret = wasm.grovegenerator_export_glb(this.__wbg_ptr, seed);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
+    }
+    /**
      * Generate a tree and return mesh data as a JavaScript object.
      *
      * Returns an object containing all LOD levels with their mesh data.
@@ -140,6 +154,10 @@ function __wbg_get_imports() {
                 wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
             }
         },
+        __wbg_length_56fcd3e2b7e0299d: function(arg0) {
+            const ret = arg0.length;
+            return ret;
+        },
         __wbg_new_02d162bc6cf02f60: function() {
             const ret = new Object();
             return ret;
@@ -151,6 +169,13 @@ function __wbg_get_imports() {
         __wbg_new_310879b66b6e95e1: function() {
             const ret = new Array();
             return ret;
+        },
+        __wbg_new_with_length_99887c91eae4abab: function(arg0) {
+            const ret = new Uint8Array(arg0 >>> 0);
+            return ret;
+        },
+        __wbg_set_24d0fa9e104112f9: function(arg0, arg1, arg2) {
+            arg0.set(getArrayU8FromWasm0(arg1, arg2));
         },
         __wbg_set_6be42768c690e380: function(arg0, arg1, arg2) {
             arg0[arg1] = arg2;
@@ -194,6 +219,11 @@ function __wbg_get_imports() {
 const GroveGeneratorFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_grovegenerator_free(ptr, 1));
+
+function getArrayU8FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}
 
 let cachedDataViewMemory0 = null;
 function getDataViewMemory0() {

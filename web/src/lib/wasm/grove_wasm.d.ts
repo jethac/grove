@@ -11,6 +11,12 @@ export class GroveGenerator {
     free(): void;
     [Symbol.dispose](): void;
     /**
+     * Export tree as GLB binary data.
+     *
+     * Returns a Uint8Array containing the complete GLB file.
+     */
+    export_glb(seed: bigint): Uint8Array;
+    /**
      * Generate a tree and return mesh data as a JavaScript object.
      *
      * Returns an object containing all LOD levels with their mesh data.
@@ -54,6 +60,7 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_grovegenerator_free: (a: number, b: number) => void;
     readonly generate_tree_from_toml: (a: number, b: number, c: bigint) => [number, number, number];
+    readonly grovegenerator_export_glb: (a: number, b: bigint) => [number, number, number];
     readonly grovegenerator_generate: (a: number, b: bigint) => [number, number, number];
     readonly grovegenerator_generate_lod: (a: number, b: bigint, c: number) => [number, number, number];
     readonly grovegenerator_get_stats: (a: number, b: bigint) => [number, number, number];

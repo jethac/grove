@@ -1,61 +1,58 @@
-# Palm Tree Species Configuration
-# A tropical tree with fronds at the crown
+# Palm (Cocos nucifera)
+# Single trunk, no branches, fronds radiate from crown.
 
 [species]
-name = "Coconut Palm"
-scientific_name = "Cocos nucifera"
+name = "Palm"
+scientific = "Cocos nucifera"
 
 [trunk]
-height = { min = 10.0, max = 20.0 }
-radius_base = { min = 0.25, max = 0.35 }
-radius_top_ratio = 0.8
-taper_curve = "slight"
-segments = 10
-curve_enabled = true
-curve_amount = { min = 0.1, max = 0.3 }
-rings_enabled = true
-ring_spacing = 0.3
+height = 12.0
+height_variance = 0.1
+radius = 0.3
+taper = 0.15
+curve = 20.0
+curve_variance = 8.0
+curve_back = 0.0
+segments = 15
 
-[branches]
-# Fronds emerge from crown
-primary_count = { min = 15, max = 25 }
-primary_angle = { min = 20.0, max = 80.0 }
-primary_length_ratio = { min = 0.3, max = 0.5 }
-primary_start_height = 0.95
+[branches.level1]
+# Fronds, not branches
+count = 18
+count_variance = 3
+length = 4.0
+length_variance = 0.15
+radius_ratio = 0.08
+angle = 45.0
+angle_variance = 15.0
+rotation = 20.0
+gravity = -0.6
+curve = 60.0
+curve_variance = 10.0
+segments = 8
 
-# No secondary branching for palms
-secondary_count = { min = 0, max = 0 }
-tertiary_count = { min = 0, max = 0 }
+# No level2/3 branches - fronds have leaflets instead
 
-[branching]
-recursion_depth = 1
-length_decay = 1.0
-radius_decay = 0.8
-angle_variance = 5.0
-heliotropism = 0.1
-crown_only = true
+[crown]
+shape = "hemispherical"
+offset = 0.92
+density = 1.0
+width_ratio = 1.5
 
 [leaves]
-type = "frond"
-density = 1.0
-size = { min = 2.0, max = 4.0 }
-leaflet_count = { min = 40, max = 60 }
-leaflet_length = { min = 0.3, max = 0.6 }
-droop = 0.4
-color = [0.2, 0.5, 0.15]
+count = 1500
+min_level = 1
+size = 0.5
+size_variance = 0.2
+distribution = "along_branch"
+geometry = "polygon"
+up_influence = 0.0
 
-[bark]
-color = [0.45, 0.4, 0.35]
-roughness = 0.5
-pattern = "ringed"
-
-[growth]
-phototropism = 0.2
-gravitropism = -0.1
-random_variation = 0.05
+[textures]
+bark_prompt = "Coconut palm trunk, grey-brown, horizontal ring scars, fibrous texture"
+leaf_prompt = "Palm frond leaflet, long narrow blade, parallel venation, glossy green"
 
 [lod]
-lod0_segments = 10
-lod1_segments = 6
-lod2_segments = 4
-frond_simplify_distance = 40.0
+preset = "balanced"
+
+[platform]
+target = "modern_pc"

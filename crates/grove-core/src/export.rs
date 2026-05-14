@@ -92,6 +92,55 @@ pub fn export_lod_meshes(
     Ok(())
 }
 
+/// Export LOD mesh set to GLB bytes (for WASM/in-memory use)
+pub fn export_lod_meshes_to_bytes(lods: &LodMeshSet, config: &ExportConfig) -> Result<Vec<u8>, ExportError> {
+    if lods.meshes.is_empty() {
+        return Err(ExportError::NoMeshes);
+    }
+
+    let gltf_data = build_gltf_lods(lods, config)?;
+    build_glb_bytes(&gltf_data)
+}
+
+/// Build GLB file format in memory
+fn build_glb_bytes(data: &GltfData) -> Result<Vec<u8>, ExportError> {
+    let json_bytes = serde_json::to_vec(&data.json)?;
+
+    // Pad JSON to 4-byte alignment
+    let json_padding = (4 - (json_bytes.len() % 4)) % 4;
+    let json_chunk_length = json_bytes.len() + json_padding;
+
+    // Pad binary to 4-byte alignment
+    let bin_padding = (4 - (data.binary.len() % 4)) % 4;
+    let bin_chunk_length = data.binary.len() + bin_padding;
+
+    // Calculate total file size
+    let total_length = 12  // GLB header
+        + 8 + json_chunk_length  // JSON chunk header + data
+        + 8 + bin_chunk_length; // BIN chunk header + data
+
+    let mut buffer = Vec::with_capacity(total_length);
+
+    // GLB header
+    buffer.extend_from_slice(b"glTF"); // magic
+    buffer.extend_from_slice(&2u32.to_le_bytes()); // version
+    buffer.extend_from_slice(&(total_length as u32).to_le_bytes()); // length
+
+    // JSON chunk
+    buffer.extend_from_slice(&(json_chunk_length as u32).to_le_bytes()); // chunk length
+    buffer.extend_from_slice(&0x4E4F534Au32.to_le_bytes()); // chunk type "JSON"
+    buffer.extend_from_slice(&json_bytes);
+    buffer.extend_from_slice(&vec![0x20u8; json_padding]); // padding with spaces
+
+    // BIN chunk
+    buffer.extend_from_slice(&(bin_chunk_length as u32).to_le_bytes()); // chunk length
+    buffer.extend_from_slice(&0x004E4942u32.to_le_bytes()); // chunk type "BIN\0"
+    buffer.extend_from_slice(&data.binary);
+    buffer.extend_from_slice(&vec![0u8; bin_padding]); // padding with zeros
+
+    Ok(buffer)
+}
+
 /// glTF data container (simplified representation)
 struct GltfData {
     json: serde_json::Value,

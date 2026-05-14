@@ -1,72 +1,82 @@
-# Willow Tree Species Configuration
-# A graceful tree with drooping branches
+# Willow (Salix babylonica)
+# Weeping form, long drooping branches.
 
 [species]
-name = "Weeping Willow"
-scientific_name = "Salix babylonica"
+name = "Willow"
+scientific = "Salix babylonica"
 
 [trunk]
-height = { min = 6.0, max = 12.0 }
-radius_base = { min = 0.5, max = 0.9 }
-radius_top_ratio = 0.35
-taper_curve = "exponential"
-segments = 12
-lean_enabled = true
-lean_amount = { min = 0.0, max = 0.1 }
+height = 5.0
+height_variance = 0.2
+radius = 0.5
+taper = 0.7
+curve = 5.0
+curve_variance = 3.0
+segments = 6
 
-[branches]
-# Primary branches spread wide
-primary_count = { min = 5, max = 8 }
-primary_angle = { min = 50.0, max = 80.0 }
-primary_length_ratio = { min = 0.6, max = 0.9 }
-primary_start_height = 0.35
+[branches.level1]
+count = 8
+count_variance = 2
+length = 5.0
+length_variance = 0.2
+radius_ratio = 0.45
+angle = 60.0
+angle_variance = 15.0
+rotation = 137.5
+gravity = -0.3
+curve = 40.0
+curve_variance = 15.0
+segments = 6
 
-# Secondary branches
-secondary_count = { min = 3, max = 5 }
-secondary_angle = { min = 40.0, max = 70.0 }
-secondary_length_ratio = { min = 0.5, max = 0.7 }
-
-# Drooping tertiary branches (whips)
-tertiary_count = { min = 8, max = 15 }
-tertiary_angle = { min = 60.0, max = 120.0 }
-tertiary_length_ratio = { min = 0.6, max = 1.2 }
-tertiary_droop = 0.9
-
-[branching]
-recursion_depth = 4
-length_decay = 0.8
-radius_decay = 0.5
+[branches.level2]
+count = 6
+count_variance = 2
+length = 3.5
+length_variance = 0.25
+radius_ratio = 0.35
+angle = 45.0
 angle_variance = 20.0
-heliotropism = 0.1
-gravitropism_override = 0.7
-weeping_enabled = true
-weeping_strength = 0.85
+rotation = 137.5
+gravity = -0.7
+curve = 90.0
+curve_variance = 20.0
+segments = 8
+
+[branches.level3]
+# The characteristic "weeping" shoots
+count = 8
+count_variance = 3
+length = 2.5
+length_variance = 0.4
+radius_ratio = 0.15
+angle = 30.0
+angle_variance = 25.0
+rotation = 90.0
+gravity = -1.0
+curve = 120.0
+segments = 10
+
+[crown]
+shape = "hemispherical"
+offset = 0.4
+density = 1.2
+width_ratio = 1.4
 
 [leaves]
-density = 0.7
-size = { min = 0.02, max = 0.04 }
-shape = "lanceolate"
-color = [0.3, 0.55, 0.2]
-droop_follow = true
+count = 4000
+min_level = 2
+size = 0.06
+size_variance = 0.2
+distribution = "along_branch"
+geometry = "billboard"
+up_influence = -0.2
 
-[bark]
-color = [0.4, 0.35, 0.25]
-roughness = 0.6
-pattern = "ridged"
-
-[growth]
-phototropism = 0.2
-gravitropism = 0.5
-random_variation = 0.25
-
-[wind]
-enabled = true
-sensitivity = 0.8
-sway_frequency = 0.5
-cascade_effect = true
+[textures]
+bark_prompt = "Weeping willow bark, grey-brown, deep ridged furrows, rough texture"
+leaf_prompt = "Willow leaf, narrow lanceolate, light green, fine serrated edge"
 
 [lod]
-lod0_segments = 12
-lod1_segments = 8
-lod2_segments = 4
-whip_simplify_distance = 25.0
+preset = "balanced"
+
+[platform]
+target = "modern_pc"

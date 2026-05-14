@@ -11,9 +11,10 @@
 //! - Real-time parameter adjustment with immediate preview
 
 use grove_core::{
+    export_lod_meshes_to_bytes,
     generate_tree as core_generate_tree,
     lod::{generate_lod_meshes_with_config, LodGenerationConfig},
-    Mesh, Species,
+    ExportConfig, Mesh, Species,
 };
 use wasm_bindgen::prelude::*;
 
@@ -101,6 +102,28 @@ impl GroveGenerator {
 
         serde_wasm_bindgen::to_value(&stats)
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Export tree as GLB binary data.
+    ///
+    /// Returns a Uint8Array containing the complete GLB file.
+    #[wasm_bindgen]
+    pub fn export_glb(&self, seed: u64) -> Result<js_sys::Uint8Array, JsValue> {
+        let tree = core_generate_tree(&self.species, seed);
+
+        // Generate LOD meshes
+        let lod_config = LodGenerationConfig::balanced();
+        let lods = generate_lod_meshes_with_config(&tree, &self.species, &lod_config);
+
+        // Export to GLB bytes
+        let config = ExportConfig::default();
+        let glb_bytes = export_lod_meshes_to_bytes(&lods, &config)
+            .map_err(|e| JsValue::from_str(&format!("Export error: {}", e)))?;
+
+        // Convert to JS Uint8Array
+        let array = js_sys::Uint8Array::new_with_length(glb_bytes.len() as u32);
+        array.copy_from(&glb_bytes);
+        Ok(array)
     }
 }
 

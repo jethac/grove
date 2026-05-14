@@ -18,9 +18,22 @@
     await treeStore.loadSpecies(text);
   }
 
-  function exportGlb() {
-    // TODO: Implement export
-    alert('Export coming soon!');
+  async function exportGlb() {
+    const blob = await treeStore.exportGlb();
+    if (!blob) {
+      alert('Export failed - make sure a tree is generated first');
+      return;
+    }
+
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tree_${Date.now()}.glb`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 </script>
 

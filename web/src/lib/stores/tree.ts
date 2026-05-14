@@ -106,10 +106,11 @@ function createTreeStore() {
 
     async init() {
       try {
-        // Dynamic import of WASM
-        wasmModule = await import('grove-wasm');
-        await wasmModule.default();
-        console.log('WASM loaded');
+        // Dynamic import of WASM from local build
+        const wasm = await import('$lib/wasm/grove_wasm.js');
+        await wasm.default();
+        wasmModule = wasm;
+        console.log('WASM loaded successfully');
       } catch (e) {
         console.error('Failed to load WASM:', e);
         update(s => ({ ...s, error: 'Failed to load WASM module' }));
@@ -233,6 +234,79 @@ function createTreeStore() {
         ...s,
         params: { ...s.params, scientificName }
       }));
+    },
+
+    // Generate TOML from current params
+    paramsToToml(): string {
+      let state: TreeState | null = null;
+      subscribe(s => state = s)();
+      if (!state) return '';
+
+      const p = state.params;
+      return `[species]
+name = "${p.name}"
+scientific = "${p.scientificName}"
+
+[trunk]
+height = ${p.trunk.height}
+radius = ${p.trunk.radius}
+taper = ${p.trunk.taper}
+curve = ${p.trunk.curve}
+segments = ${p.trunk.segments}
+
+[branches.level1]
+count = ${p.branches.level1.count}
+length = ${p.branches.level1.length}
+angle = ${p.branches.level1.angle}
+rotation = ${p.branches.level1.rotation}
+gravity = ${p.branches.level1.gravity}
+
+[branches.level2]
+count = ${p.branches.level2.count}
+length = ${p.branches.level2.length}
+angle = ${p.branches.level2.angle}
+rotation = ${p.branches.level2.rotation}
+gravity = ${p.branches.level2.gravity}
+
+[crown]
+shape = "${p.crown.shape}"
+offset = ${p.crown.offset}
+
+[leaves]
+count = ${p.leaves.count}
+size = ${p.leaves.size}
+geometry = "${p.leaves.geometry}"
+`;
+    },
+
+    // Generate from current params
+    async generateFromParams() {
+      const toml = this.paramsToToml();
+      await this.loadSpecies(toml);
+    },
+
+    // Export GLB file
+    async exportGlb(): Promise<Blob | null> {
+      if (!generator || !wasmModule) return null;
+
+      try {
+        const state = await new Promise<TreeState>(resolve => {
+          subscribe(s => resolve(s))();
+        });
+
+        // Get GLB data from WASM
+        const glbData = generator.export_glb(BigInt(state.seed));
+        return new Blob([glbData], { type: 'model/gltf-binary' });
+      } catch (e: any) {
+        console.error('Export failed:', e);
+        update(s => ({ ...s, error: `Export failed: ${e.toString()}` }));
+        return null;
+      }
+    },
+
+    // Check if generator is ready
+    isReady(): boolean {
+      return generator !== null && wasmModule !== null;
     }
   };
 }
