@@ -1,20 +1,14 @@
-//! # grove-core
+//! Grove - Procedural tree generation library
 //!
-//! Core library for procedural tree generation.
-//!
-//! This crate provides the fundamental algorithms and data structures for
-//! generating realistic procedural trees, including:
-//!
-//! - Branch growth algorithms based on space colonization
-//! - Species parameter definitions loaded from TOML presets
-//! - Mesh generation for branches and foliage
-//! - Export capabilities to glTF and other formats
-//!
-//! ## Features
-//!
-//! - **Deterministic generation**: Seed-based RNG for reproducible results
-//! - **Parallel processing**: Uses rayon for multi-threaded mesh generation
-//! - **Flexible presets**: TOML-based species configuration system
+//! A standalone procedural tree generation tool for real-time game engines.
+//! Generates 3D tree meshes with LOD, wind animation data, and AI-generated textures.
+
+pub mod constants;
+pub mod math;
+pub mod rng;
+
+pub use constants::*;
+pub use rng::Rng;
 
 /// Placeholder for the tree generation module.
 pub fn generate() {
