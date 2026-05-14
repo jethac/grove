@@ -1,3 +1,6 @@
+# Oak (Quercus robur)
+# Broad, spreading crown with thick trunk. Irregular branching.
+
 [species]
 name = "Oak"
 scientific = "Quercus robur"
@@ -18,7 +21,7 @@ count_variance = 2
 length = 4.5
 length_variance = 0.25
 radius_ratio = 0.55
-angle = 45.0
+angle = 55.0
 angle_variance = 20.0
 rotation = 137.5
 gravity = -0.15
@@ -29,16 +32,29 @@ segments = 6
 [branches.level2]
 count = 4
 count_variance = 1
-length = 2.5
+length = 2.2
 length_variance = 0.3
 radius_ratio = 0.5
 angle = 50.0
 angle_variance = 15.0
 rotation = 137.5
-gravity = -0.1
-curve = 15.0
-curve_variance = 8.0
+gravity = -0.25
+curve = 35.0
+curve_variance = 12.0
 segments = 4
+
+[branches.level3]
+count = 3
+count_variance = 1
+length = 0.9
+length_variance = 0.35
+radius_ratio = 0.4
+angle = 55.0
+angle_variance = 20.0
+rotation = 137.5
+gravity = -0.4
+curve = 40.0
+segments = 2
 
 [crown]
 shape = "spherical"
@@ -53,10 +69,11 @@ size = 0.12
 size_variance = 0.25
 distribution = "both"
 geometry = "cross_billboard"
+up_influence = 0.25
 
 [textures]
-bark_prompt = "Rough oak bark with deep fissures"
-leaf_prompt = "Oak leaf with rounded lobes"
+bark_prompt = "English oak tree bark, deep fissures, grey-brown, coarse texture"
+leaf_prompt = "Oak leaves with rounded lobes, dark green, visible venation"
 
 [lod]
 preset = "balanced"
