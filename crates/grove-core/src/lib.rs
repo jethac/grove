@@ -28,6 +28,7 @@
 //! ```
 
 pub mod constants;
+pub mod export;
 pub mod generation;
 pub mod leaves;
 pub mod lod;
@@ -39,6 +40,7 @@ pub mod species;
 pub mod tree;
 
 pub use constants::*;
+pub use export::{export_lod_meshes, export_mesh, ExportConfig, ExportError, ExportFormat};
 pub use generation::generate_tree;
 pub use leaves::{add_leaves_to_tree, generate_leaf_mesh, place_leaves, LeafConfig, LeafShape};
 pub use lod::{
