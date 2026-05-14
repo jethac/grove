@@ -1,0 +1,61 @@
+# Palm Tree Species Configuration
+# A tropical tree with fronds at the crown
+
+[species]
+name = "Coconut Palm"
+scientific_name = "Cocos nucifera"
+
+[trunk]
+height = { min = 10.0, max = 20.0 }
+radius_base = { min = 0.25, max = 0.35 }
+radius_top_ratio = 0.8
+taper_curve = "slight"
+segments = 10
+curve_enabled = true
+curve_amount = { min = 0.1, max = 0.3 }
+rings_enabled = true
+ring_spacing = 0.3
+
+[branches]
+# Fronds emerge from crown
+primary_count = { min = 15, max = 25 }
+primary_angle = { min = 20.0, max = 80.0 }
+primary_length_ratio = { min = 0.3, max = 0.5 }
+primary_start_height = 0.95
+
+# No secondary branching for palms
+secondary_count = { min = 0, max = 0 }
+tertiary_count = { min = 0, max = 0 }
+
+[branching]
+recursion_depth = 1
+length_decay = 1.0
+radius_decay = 0.8
+angle_variance = 5.0
+heliotropism = 0.1
+crown_only = true
+
+[leaves]
+type = "frond"
+density = 1.0
+size = { min = 2.0, max = 4.0 }
+leaflet_count = { min = 40, max = 60 }
+leaflet_length = { min = 0.3, max = 0.6 }
+droop = 0.4
+color = [0.2, 0.5, 0.15]
+
+[bark]
+color = [0.45, 0.4, 0.35]
+roughness = 0.5
+pattern = "ringed"
+
+[growth]
+phototropism = 0.2
+gravitropism = -0.1
+random_variation = 0.05
+
+[lod]
+lod0_segments = 10
+lod1_segments = 6
+lod2_segments = 4
+frond_simplify_distance = 40.0

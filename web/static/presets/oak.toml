@@ -1,0 +1,60 @@
+# Oak Tree Species Configuration
+# A classic deciduous tree with broad spreading canopy
+
+[species]
+name = "English Oak"
+scientific_name = "Quercus robur"
+
+[trunk]
+height = { min = 8.0, max = 15.0 }
+radius_base = { min = 0.4, max = 0.8 }
+radius_top_ratio = 0.3
+taper_curve = "exponential"
+segments = 12
+
+[branches]
+# Primary branches
+primary_count = { min = 4, max = 7 }
+primary_angle = { min = 40.0, max = 70.0 }
+primary_length_ratio = { min = 0.5, max = 0.8 }
+primary_start_height = 0.4
+
+# Secondary branches
+secondary_count = { min = 2, max = 4 }
+secondary_angle = { min = 30.0, max = 60.0 }
+secondary_length_ratio = { min = 0.4, max = 0.7 }
+
+# Tertiary branches (twigs)
+tertiary_count = { min = 3, max = 6 }
+tertiary_angle = { min = 20.0, max = 50.0 }
+tertiary_length_ratio = { min = 0.3, max = 0.5 }
+
+[branching]
+recursion_depth = 4
+length_decay = 0.7
+radius_decay = 0.65
+angle_variance = 15.0
+heliotropism = 0.3
+
+[leaves]
+density = 0.8
+size = { min = 0.03, max = 0.06 }
+shape = "lobed"
+color = [0.13, 0.55, 0.13]
+fall_color = [0.8, 0.5, 0.1]
+
+[bark]
+color = [0.36, 0.25, 0.2]
+roughness = 0.85
+pattern = "furrowed"
+
+[growth]
+phototropism = 0.5
+gravitropism = -0.3
+random_variation = 0.2
+
+[lod]
+lod0_segments = 12
+lod1_segments = 8
+lod2_segments = 4
+leaf_billboard_distance = 50.0

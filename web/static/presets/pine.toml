@@ -1,0 +1,65 @@
+# Pine Tree Species Configuration
+# A coniferous tree with conical shape
+
+[species]
+name = "Scots Pine"
+scientific_name = "Pinus sylvestris"
+
+[trunk]
+height = { min = 12.0, max = 25.0 }
+radius_base = { min = 0.3, max = 0.5 }
+radius_top_ratio = 0.15
+taper_curve = "linear"
+segments = 8
+
+[branches]
+# Whorled branching pattern
+primary_count = { min = 4, max = 6 }
+primary_angle = { min = 70.0, max = 90.0 }
+primary_length_ratio = { min = 0.3, max = 0.6 }
+primary_start_height = 0.3
+
+# Secondary branches
+secondary_count = { min = 2, max = 3 }
+secondary_angle = { min = 40.0, max = 60.0 }
+secondary_length_ratio = { min = 0.5, max = 0.7 }
+
+# Twigs
+tertiary_count = { min = 2, max = 4 }
+tertiary_angle = { min = 30.0, max = 45.0 }
+tertiary_length_ratio = { min = 0.4, max = 0.6 }
+
+[branching]
+recursion_depth = 3
+length_decay = 0.75
+radius_decay = 0.6
+angle_variance = 10.0
+heliotropism = 0.4
+whorl_enabled = true
+whorl_count = { min = 8, max = 15 }
+whorl_spacing = { min = 0.8, max = 1.2 }
+
+[leaves]
+type = "needles"
+density = 0.9
+size = { min = 0.05, max = 0.1 }
+bundle_count = 2
+color = [0.0, 0.35, 0.2]
+
+[bark]
+color = [0.5, 0.35, 0.25]
+roughness = 0.7
+pattern = "scaly"
+
+[growth]
+phototropism = 0.6
+gravitropism = -0.5
+random_variation = 0.1
+conical_shape = true
+apex_dominance = 0.8
+
+[lod]
+lod0_segments = 8
+lod1_segments = 6
+lod2_segments = 4
+needle_cluster_distance = 30.0
