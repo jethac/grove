@@ -5,12 +5,9 @@
     Controls,
     Background,
     BackgroundVariant,
-    MiniMap,
-    type Node,
-    type Edge,
-    type NodeTypes,
-    type Connection
+    MiniMap
   } from '@xyflow/svelte';
+  import type { Node, Edge, NodeTypes, Connection } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
   import { treeStore } from '$lib/stores/tree';

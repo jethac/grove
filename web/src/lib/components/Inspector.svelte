@@ -276,7 +276,7 @@
       value={$treeStore.params.crown.shape}
       options={crownShapeOptions}
       on:change={(e) => {
-        treeStore.updateCrown('shape', e.detail as any);
+        treeStore.updateCrown('shape', e.detail);
         if ($editorStore.autoRegenerate) treeStore.regenerate();
       }}
     />
@@ -322,7 +322,7 @@
       value={$treeStore.params.leaves.geometry}
       options={leafGeometryOptions}
       on:change={(e) => {
-        treeStore.updateLeaves('geometry', e.detail as any);
+        treeStore.updateLeaves('geometry', e.detail);
         if ($editorStore.autoRegenerate) treeStore.regenerate();
       }}
     />
