@@ -6,9 +6,11 @@
 pub mod constants;
 pub mod math;
 pub mod rng;
+pub mod species;
 
 pub use constants::*;
 pub use rng::Rng;
+pub use species::Species;
 
 /// Placeholder for the tree generation module.
 pub fn generate() {
