@@ -32,5 +32,5 @@ fn main() {
     println!("Use --help for usage information");
 
     // TODO: Implement CLI commands
-    grove_core::generate();
+    // TODO: Implement CLI commands using grove_core::generate_tree()
 }

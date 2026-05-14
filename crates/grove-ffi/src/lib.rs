@@ -30,7 +30,7 @@ pub type GroveTreeHandle = *mut c_void;
 /// The returned handle must be freed with `grove_tree_free`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn grove_tree_generate() -> GroveTreeHandle {
-    grove_core::generate();
+    // TODO: Implement using grove_core::generate_tree()
     // TODO: Return actual tree handle
     std::ptr::null_mut()
 }

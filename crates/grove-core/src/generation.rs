@@ -16,6 +16,7 @@ use glam::Vec3;
 /// Generator context for tree creation
 pub struct TreeGenerator<'a> {
     species: &'a Species,
+    seed: u64,
     rng: Rng,
     tree: Tree,
     next_stem_id: u32,
@@ -26,6 +27,7 @@ impl<'a> TreeGenerator<'a> {
     pub fn new(species: &'a Species, seed: u64) -> Self {
         Self {
             species,
+            seed,
             rng: Rng::from_seed(seed),
             tree: Tree::new(species.species.name.clone(), seed),
             next_stem_id: 0,
@@ -43,6 +45,9 @@ impl<'a> TreeGenerator<'a> {
 
         // Update bounding box
         self.tree.update_bounds();
+
+        // Generate leaves
+        crate::leaves::add_leaves_to_tree(&mut self.tree, self.species, self.seed);
 
         self.tree
     }

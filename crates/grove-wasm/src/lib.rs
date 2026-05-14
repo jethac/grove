@@ -32,7 +32,7 @@ pub fn init() {
 /// Generate a tree and return it as glTF binary data.
 #[wasm_bindgen]
 pub fn generate_tree() -> Vec<u8> {
-    grove_core::generate();
+    // TODO: Implement using grove_core::generate_tree()
     // TODO: Return actual glTF data
     Vec::new()
 }

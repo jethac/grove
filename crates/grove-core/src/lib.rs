@@ -29,6 +29,7 @@
 
 pub mod constants;
 pub mod generation;
+pub mod leaves;
 pub mod math;
 pub mod mesh;
 pub mod mesh_builder;
@@ -38,6 +39,7 @@ pub mod tree;
 
 pub use constants::*;
 pub use generation::generate_tree;
+pub use leaves::{add_leaves_to_tree, generate_leaf_mesh, place_leaves, LeafConfig, LeafShape};
 pub use mesh::{MaterialType, Mesh, Submesh, Vertex};
 pub use mesh_builder::{build_mesh, build_mesh_with_config, MeshBuilder, MeshConfig};
 pub use rng::Rng;
