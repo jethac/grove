@@ -261,17 +261,29 @@
       toml += `segments = ${config.trunk.segments}\n\n`;
     }
 
-    // Branch sections
+    // Branch sections - must have level1, level2, level3
+    const branchDefaults = {
+      count: 3, length: 1.0, angle: 45, rotation: 137.5, gravity: 0.2, segments: 4
+    };
+
+    // Sort branches by level and create a map
+    const branchMap: Record<number, any> = {};
     if (config.branches) {
       for (const branch of config.branches) {
-        toml += `[[branches]]\n`;
-        toml += `level = ${branch.level}\n`;
-        toml += `count = ${branch.count}\n`;
-        toml += `length = ${branch.length}\n`;
-        toml += `angle = ${branch.angle}\n`;
-        toml += `rotation = ${branch.rotation}\n`;
-        toml += `gravity = ${branch.gravity}\n\n`;
+        branchMap[branch.level] = branch;
       }
+    }
+
+    // Generate all 3 levels
+    for (let level = 1; level <= 3; level++) {
+      const branch = branchMap[level] || { ...branchDefaults, level };
+      toml += `[branches.level${level}]\n`;
+      toml += `count = ${branch.count}\n`;
+      toml += `length = ${branch.length}\n`;
+      toml += `angle = ${branch.angle}\n`;
+      toml += `rotation = ${branch.rotation}\n`;
+      toml += `gravity = ${branch.gravity}\n`;
+      toml += `segments = ${branch.segments || 4}\n\n`;
     }
 
     // Crown section

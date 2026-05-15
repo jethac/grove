@@ -260,6 +260,7 @@ length = ${p.branches.level1.length}
 angle = ${p.branches.level1.angle}
 rotation = ${p.branches.level1.rotation}
 gravity = ${p.branches.level1.gravity}
+segments = 6
 
 [branches.level2]
 count = ${p.branches.level2.count}
@@ -267,6 +268,15 @@ length = ${p.branches.level2.length}
 angle = ${p.branches.level2.angle}
 rotation = ${p.branches.level2.rotation}
 gravity = ${p.branches.level2.gravity}
+segments = 4
+
+[branches.level3]
+count = 2
+length = 0.5
+angle = 45
+rotation = 137.5
+gravity = 0.3
+segments = 2
 
 [crown]
 shape = "${p.crown.shape}"
