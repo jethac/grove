@@ -52,19 +52,18 @@ jobs:
       # The jethaforge stack dep is a private git repository. The lockfile
       # resolved it as git+ssh://; rewrite to https and supply credentials via
       # a helper so `npm ci`'s nested `git ls-remote` can read it.
+      # The jethaforge stack dep is a private git repository. Three things are
+      # needed: rewrite the lockfile's ssh:// URLs to https, supply a token via
+      # a credential helper, and drop checkout's local extraheader — it carries
+      # the midori-scoped GITHUB_TOKEN, which overrides the helper for ANY
+      # github.com URL fetched from this worktree (causing 404s on jethaforge).
       - name: Configure git auth for private jethaforge dep
         run: |
+          git config --local --unset-all http.https://github.com/.extraheader || true
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
           git config --global credential.helper \
             '!f() { echo "username=x-access-token"; echo "password=${{ secrets.JETHAFORGE_TOKEN }}"; }; f'
-      - name: Verify private dep auth
-        run: |
-          TOKEN="${{ secrets.JETHAFORGE_TOKEN }}"
-          echo "token length: ${#TOKEN}"
-          curl -sf -o /dev/null -w "api: %{http_code}\n" \
-            -H "Authorization: token $TOKEN" \
-            https://api.github.com/repos/splatterfacegames/jethaforge
-          git ls-remote https://github.com/splatterfacegames/jethaforge.git HEAD
+          git ls-remote https://github.com/splatterfacegames/jethaforge.git HEAD >/dev/null
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
