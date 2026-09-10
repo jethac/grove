@@ -14,10 +14,10 @@
 
 use clap::{Parser, Subcommand, ValueEnum};
 use grove_core::{
-    export_lod_meshes, export_mesh, generate_lod_meshes_with_config, generate_tree,
-    ExportConfig, ExportFormat, LodGenerationConfig, Species,
+    ExportConfig, ExportFormat, LodGenerationConfig, Species, export_lod_meshes, export_mesh,
+    generate_lod_meshes_with_config, generate_tree,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Grove - Procedural Tree Generator
@@ -74,7 +74,7 @@ enum Commands {
     },
 }
 
-#[derive(Clone, ValueEnum)]
+#[derive(Clone, Copy, ValueEnum)]
 enum LodOption {
     /// Export all LOD levels
     All,
@@ -92,7 +92,7 @@ enum LodOption {
     Lod3,
 }
 
-#[derive(Clone, ValueEnum)]
+#[derive(Clone, Copy, ValueEnum)]
 enum OutputFormat {
     /// Binary glTF (.glb)
     Glb,
@@ -100,7 +100,7 @@ enum OutputFormat {
     Gltf,
 }
 
-#[derive(Clone, ValueEnum)]
+#[derive(Clone, Copy, ValueEnum)]
 enum LodPreset {
     /// Ultra quality (5 LOD levels)
     Ultra,
@@ -128,9 +128,16 @@ fn main() {
             format,
             lod_preset,
             verbose,
-        } => run_generate(
-            &species, &output, count, seed, lod, format, lod_preset, verbose,
-        ),
+        } => run_generate(&GenerateOptions {
+            species_path: &species,
+            output_path: &output,
+            count,
+            seed,
+            lod,
+            format,
+            lod_preset,
+            verbose,
+        }),
         Commands::Info { species } => run_info(&species),
     };
 
@@ -140,17 +147,24 @@ fn main() {
     }
 }
 
-fn run_generate(
-    species_path: &PathBuf,
-    output_path: &PathBuf,
+struct GenerateOptions<'a> {
+    species_path: &'a Path,
+    output_path: &'a Path,
     count: u32,
     seed: Option<u64>,
     lod: LodOption,
     format: OutputFormat,
     lod_preset: LodPreset,
     verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+}
+
+fn run_generate(options: &GenerateOptions) -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
+    let species_path = options.species_path;
+    let output_path = options.output_path;
+    let count = options.count;
+    let seed = options.seed;
+    let verbose = options.verbose;
 
     // Load species
     if verbose {
@@ -163,7 +177,7 @@ fn run_generate(
     );
 
     // Get LOD config
-    let lod_config = match lod_preset {
+    let lod_config = match options.lod_preset {
         LodPreset::Ultra => LodGenerationConfig::ultra(),
         LodPreset::HighQuality => LodGenerationConfig::high_quality(),
         LodPreset::Balanced => LodGenerationConfig::balanced(),
@@ -173,7 +187,7 @@ fn run_generate(
 
     // Get export config
     let export_config = ExportConfig {
-        format: match format {
+        format: match options.format {
             OutputFormat::Glb => ExportFormat::Glb,
             OutputFormat::Gltf => ExportFormat::GlTf,
         },
@@ -221,7 +235,7 @@ fn run_generate(
                 .unwrap_or("glb");
             output_path.with_file_name(format!("{}_{}.{}", stem, i, ext))
         } else {
-            output_path.clone()
+            output_path.to_path_buf()
         };
 
         // Generate LOD meshes
@@ -240,12 +254,12 @@ fn run_generate(
 
         // Export based on LOD option
         let export_start = Instant::now();
-        match lod {
+        match options.lod {
             LodOption::All => {
                 export_lod_meshes(&lod_meshes, &tree_output, &export_config)?;
             }
             LodOption::Lod0 | LodOption::Lod1 | LodOption::Lod2 | LodOption::Lod3 => {
-                let level = match lod {
+                let level = match options.lod {
                     LodOption::Lod0 => 0,
                     LodOption::Lod1 => 1,
                     LodOption::Lod2 => 2,
@@ -273,7 +287,7 @@ fn run_generate(
     Ok(())
 }
 
-fn run_info(species_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn run_info(species_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let species = Species::from_file(species_path)?;
 
     println!(

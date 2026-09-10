@@ -1,0 +1,343 @@
+.grove-app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.grove-panel-content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.grove-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+}
+
+.grove-section-title {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.grove-subtle {
+  opacity: 0.65;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.grove-error {
+  color: var(--fg-danger, #e06c75);
+  font-size: 11px;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+
+.grove-error-inline {
+  color: var(--fg-danger, #e06c75);
+  font-style: normal;
+  font-size: 11px;
+}
+
+/* ---- species library ---- */
+
+.grove-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grove-preset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.grove-preset small {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+.grove-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grove-action-stack button,
+.grove-layer-row button,
+.grove-variant,
+.grove-source-actions button,
+.grove-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* ---- objects panel ---- */
+
+.grove-object-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.grove-object-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.grove-object-row small {
+  opacity: 0.55;
+}
+
+.grove-layer-row {
+  display: flex;
+  gap: 6px;
+}
+
+.grove-variant-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.grove-variant {
+  min-width: 40px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+/* ---- params inspector ---- */
+
+.grove-section summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.grove-section summary::before {
+  content: '▸';
+  margin-right: 6px;
+  opacity: 0.5;
+}
+
+.grove-section[open] summary::before {
+  content: '▾';
+}
+
+.grove-section-toggle {
+  display: inline-flex;
+  padding: 2px;
+}
+
+.grove-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  padding: 4px 0 8px;
+}
+
+.grove-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.grove-field-label {
+  font-size: 10px;
+  opacity: 0.65;
+  display: flex;
+  justify-content: space-between;
+}
+
+.grove-field-label em {
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.grove-field input,
+.grove-field select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---- source panel ---- */
+
+.grove-source {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.grove-source-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-subtle, #3333);
+}
+
+.grove-source-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.grove-source-editor {
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  border: none;
+  padding: 8px 10px;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  background: transparent;
+  color: inherit;
+  outline: none;
+}
+
+/* ---- viewport ---- */
+
+.grove-view-badge {
+  position: absolute;
+  bottom: 26px;
+  left: 10px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.grove-viewport-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.grove-viewport-empty span {
+  font-size: 40px;
+  font-weight: 200;
+}
+
+.grove-view-tools {
+  display: flex;
+  gap: 4px;
+}
+
+/* ---- activity ---- */
+
+.grove-activity {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.grove-activity p {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.grove-log {
+  flex: 1;
+  overflow-y: auto;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 10.5px;
+  opacity: 0.85;
+}
+
+.grove-log p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ---- header / status ---- */
+
+.grove-header-species {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.grove-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4c8a3d;
+  display: inline-block;
+}
+
+.grove-status-busy {
+  background: #d19a3d;
+}
+
+.grove-status-right {
+  margin-left: auto;
+  opacity: 0.55;
+}
+
+/* ---- modal ---- */
+
+.grove-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.grove-modal {
+  background: var(--bg-elevated, #23282d);
+  color: inherit;
+  border: 1px solid var(--border-subtle, #3a4048);
+  border-radius: 8px;
+  padding: 16px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grove-modal h2 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.grove-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

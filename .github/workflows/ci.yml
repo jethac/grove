@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust workspace
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: rustup toolchain install stable --profile minimal --component clippy --component rustfmt
+      # grove-desktop is excluded from the workspace (its jethaforge dep needs
+      # private auth); these commands cover the engine, CLI, WASM, and FFI.
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+
+  wasm:
+    name: WASM crate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: rustup toolchain install stable --profile minimal
+      - run: rustup target add wasm32-unknown-unknown
+      # The committed apps/desktop/src/wasm bundle is produced by `npm run wasm`;
+      # this step verifies the crate still compiles for wasm32.
+      - run: cargo build -p grove-wasm --target wasm32-unknown-unknown --locked
+
+  app:
+    name: Workbench app
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.15.0
+          cache: npm
+      # The jethaforge stack dep is a private git repository. Three things are
+      # needed: rewrite the lockfile's ssh:// URLs to https, supply a token via
+      # a credential helper, and drop checkout's local extraheader — it carries
+      # the midori-scoped GITHUB_TOKEN, which overrides the helper for ANY
+      # github.com URL fetched from this worktree (causing 404s on jethaforge).
+      - name: Configure git auth for private jethaforge dep
+        run: |
+          git config --local --unset-all http.https://github.com/.extraheader || true
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global credential.helper \
+            '!f() { echo "username=x-access-token"; echo "password=${{ secrets.JETHAFORGE_TOKEN }}"; }; f'
+          git ls-remote https://github.com/splatterfacegames/jethaforge.git HEAD >/dev/null
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

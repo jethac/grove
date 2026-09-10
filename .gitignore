@@ -34,15 +34,16 @@ Thumbs.db
 # WebAssembly build output (root pkg dir)
 pkg/
 
-# Web project
-web/node_modules/
-web/.svelte-kit/
-web/build/
+# Workbench app
+node_modules/
+dist/
+apps/desktop/node_modules/
+.playwright-mcp/
 
-# Keep WASM output in web/src/lib/wasm/
-!web/src/lib/wasm/*.wasm
-!web/src/lib/wasm/*.js
-!web/src/lib/wasm/*.d.ts
+# Tauri generated ACL schemas
+crates/*/gen/
+
+# Committed WASM bundle lives in apps/desktop/src/wasm/ (regenerate with `npm run wasm`)
 
 # Generated output
 output/

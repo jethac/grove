@@ -64,7 +64,6 @@ impl<'a> MeshBuilder<'a> {
         self.mesh
     }
 
-
     /// Build branches up to max_level depth
     ///
     /// This is useful for LOD generation where lower LOD levels
@@ -558,8 +557,16 @@ mod tests {
         let mesh2 = build_mesh_with_config(&tree, config2);
 
         // Find max V coordinate in each mesh
-        let max_v1 = mesh1.vertices.iter().map(|v| v.uv.y).fold(0.0_f32, f32::max);
-        let max_v2 = mesh2.vertices.iter().map(|v| v.uv.y).fold(0.0_f32, f32::max);
+        let max_v1 = mesh1
+            .vertices
+            .iter()
+            .map(|v| v.uv.y)
+            .fold(0.0_f32, f32::max);
+        let max_v2 = mesh2
+            .vertices
+            .iter()
+            .map(|v| v.uv.y)
+            .fold(0.0_f32, f32::max);
 
         // V coordinates should scale proportionally
         assert!(

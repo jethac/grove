@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 /// type of tree. This includes physical structure (trunk, branches, crown),
 /// visual elements (leaves, textures), and optimization settings (LOD, platform).
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Species {
     /// Basic species identification
     pub species: SpeciesInfo,
@@ -40,6 +41,7 @@ pub struct Species {
 
 /// Basic species identification information.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct SpeciesInfo {
     /// Common name of the tree species (e.g., "Oak")
     pub name: String,
@@ -50,6 +52,7 @@ pub struct SpeciesInfo {
 
 /// Trunk geometry parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct TrunkParams {
     /// Base height of the trunk in meters
     #[serde(default = "default_trunk_height")]
@@ -79,17 +82,22 @@ pub struct TrunkParams {
 
 /// Container for branch parameters at different levels.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct BranchLevels {
     /// Primary branches off the trunk
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub level1: Option<BranchParams>,
     /// Secondary branches
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub level2: Option<BranchParams>,
     /// Tertiary branches (twigs)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub level3: Option<BranchParams>,
 }
 
 /// Branch geometry and distribution parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct BranchParams {
     /// Number of branches at this level
     #[serde(default = "default_branch_count")]
@@ -147,6 +155,7 @@ pub enum CrownShape {
 
 /// Crown shape and density parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct CrownParams {
     /// Overall crown shape
     #[serde(default = "default_crown_shape")]
@@ -175,12 +184,13 @@ pub enum LeafDistribution {
 }
 
 /// Leaf rendering geometry type.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LeafGeometry {
     /// Full polygon mesh leaves
     Polygon,
     /// Two crossed billboard quads
+    #[default]
     CrossBillboard,
     /// Single camera-facing billboard
     Billboard,
@@ -190,6 +200,7 @@ pub enum LeafGeometry {
 
 /// Leaf rendering parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LeafParams {
     /// Total number of leaves
     #[serde(default = "default_leaf_count")]
@@ -216,6 +227,7 @@ pub struct LeafParams {
 
 /// AI texture generation parameters.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct TextureParams {
     /// Prompt for bark texture generation
     #[serde(default)]
@@ -245,12 +257,13 @@ pub enum LodPreset {
 
 /// Level of detail configuration.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LodConfig {
     /// LOD preset to use
     #[serde(default = "default_lod_preset")]
     pub preset: LodPreset,
     /// Override number of LOD levels
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub count: Option<u32>,
     /// Custom LOD level definitions
     #[serde(default)]
@@ -259,6 +272,7 @@ pub struct LodConfig {
 
 /// Individual LOD level definition.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LodLevel {
     /// LOD index (0 = highest quality)
     pub index: u32,
@@ -268,7 +282,7 @@ pub struct LodLevel {
     /// Target triangle count
     pub target_triangles: u32,
     /// Maximum allowed triangles
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_triangles: Option<u32>,
     /// Number of branch levels to include
     #[serde(default = "default_branch_levels")]
@@ -280,7 +294,7 @@ pub struct LodLevel {
     #[serde(default = "default_one")]
     pub leaf_reduction: f32,
     /// Ring resolution for trunk/branches [trunk, level1, level2, level3]
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ring_resolution: Option<[u32; 4]>,
     /// Screen height threshold for LOD switching
     #[serde(default)]
@@ -310,6 +324,7 @@ pub enum PlatformTarget {
 
 /// Platform-specific optimization configuration.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct PlatformConfig {
     /// Target platform
     #[serde(default = "default_platform")]
@@ -422,12 +437,6 @@ impl Default for PlatformConfig {
         Self {
             target: default_platform(),
         }
-    }
-}
-
-impl Default for LeafGeometry {
-    fn default() -> Self {
-        LeafGeometry::CrossBillboard
     }
 }
 
@@ -951,7 +960,10 @@ shape = "{}"
             CrownShape::Conical
         );
         assert_eq!(
-            Species::from_toml(&toml("hemispherical")).unwrap().crown.shape,
+            Species::from_toml(&toml("hemispherical"))
+                .unwrap()
+                .crown
+                .shape,
             CrownShape::Hemispherical
         );
         assert_eq!(
@@ -1018,7 +1030,10 @@ geometry = "{}"
         };
 
         assert_eq!(
-            Species::from_toml(&toml("polygon")).unwrap().leaves.geometry,
+            Species::from_toml(&toml("polygon"))
+                .unwrap()
+                .leaves
+                .geometry,
             LeafGeometry::Polygon
         );
         assert_eq!(
@@ -1061,7 +1076,10 @@ preset = "{}"
             LodPreset::Ultra
         );
         assert_eq!(
-            Species::from_toml(&toml("high_quality")).unwrap().lod.preset,
+            Species::from_toml(&toml("high_quality"))
+                .unwrap()
+                .lod
+                .preset,
             LodPreset::HighQuality
         );
         assert_eq!(
@@ -1242,6 +1260,18 @@ scientific = "Test"
 [trunk]
 "#;
         assert!(Species::from_toml(missing_name).is_err());
+    }
+
+    #[test]
+    fn test_unknown_keys_rejected() {
+        // A typoed key must fail loudly rather than silently falling back to defaults.
+        let typo = r#"
+[species]
+name = "Oak"
+[trunk]
+hieght = 6.0
+"#;
+        assert!(Species::from_toml(typo).is_err());
     }
 
     #[test]
