@@ -57,6 +57,14 @@ jobs:
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
           git config --global credential.helper \
             '!f() { echo "username=x-access-token"; echo "password=${{ secrets.JETHAFORGE_TOKEN }}"; }; f'
+      - name: Verify private dep auth
+        run: |
+          TOKEN="${{ secrets.JETHAFORGE_TOKEN }}"
+          echo "token length: ${#TOKEN}"
+          curl -sf -o /dev/null -w "api: %{http_code}\n" \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/splatterfacegames/jethaforge
+          git ls-remote https://github.com/splatterfacegames/jethaforge.git HEAD
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
