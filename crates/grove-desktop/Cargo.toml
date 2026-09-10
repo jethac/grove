@@ -1,0 +1,28 @@
+[package]
+name = "grove-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tauri desktop shell for the Grove workbench"
+build = "build.rs"
+
+[lib]
+name = "grove_desktop"
+path = "src/lib.rs"
+
+[[bin]]
+name = "grove-desktop"
+path = "src/main.rs"
+
+[dependencies]
+tauri = { version = "2", features = ["devtools"] }
+tauri-plugin-dialog = "2"
+tools-frontend-host-tauri = { git = "https://github.com/splatterfacegames/jethaforge.git", rev = "239eb1fb6161640ff4adf39b5d66a2a6f7d20664" }
+serde_json = "1"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

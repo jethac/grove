@@ -5,6 +5,7 @@ members = [
     "crates/grove-cli",
     "crates/grove-wasm",
     "crates/grove-ffi",
+    "crates/grove-desktop",
 ]
 
 [workspace.package]
@@ -12,3 +13,9 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/splatterfacegames/midori"
+
+# The Tauri/webview dependency tree is very large under full debuginfo.
+# Keep local workspace crates fully debuggable but trim dependency symbols so
+# `cargo build`/`test`/`tauri dev` stay usable on shared build machines.
+[profile.dev.package."*"]
+debug = "line-tables-only"

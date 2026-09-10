@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 /// type of tree. This includes physical structure (trunk, branches, crown),
 /// visual elements (leaves, textures), and optimization settings (LOD, platform).
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Species {
     /// Basic species identification
     pub species: SpeciesInfo,
@@ -40,6 +41,7 @@ pub struct Species {
 
 /// Basic species identification information.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct SpeciesInfo {
     /// Common name of the tree species (e.g., "Oak")
     pub name: String,
@@ -50,6 +52,7 @@ pub struct SpeciesInfo {
 
 /// Trunk geometry parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct TrunkParams {
     /// Base height of the trunk in meters
     #[serde(default = "default_trunk_height")]
@@ -79,6 +82,7 @@ pub struct TrunkParams {
 
 /// Container for branch parameters at different levels.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct BranchLevels {
     /// Primary branches off the trunk
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -93,6 +97,7 @@ pub struct BranchLevels {
 
 /// Branch geometry and distribution parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct BranchParams {
     /// Number of branches at this level
     #[serde(default = "default_branch_count")]
@@ -150,6 +155,7 @@ pub enum CrownShape {
 
 /// Crown shape and density parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct CrownParams {
     /// Overall crown shape
     #[serde(default = "default_crown_shape")]
@@ -194,6 +200,7 @@ pub enum LeafGeometry {
 
 /// Leaf rendering parameters.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LeafParams {
     /// Total number of leaves
     #[serde(default = "default_leaf_count")]
@@ -220,6 +227,7 @@ pub struct LeafParams {
 
 /// AI texture generation parameters.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct TextureParams {
     /// Prompt for bark texture generation
     #[serde(default)]
@@ -249,6 +257,7 @@ pub enum LodPreset {
 
 /// Level of detail configuration.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LodConfig {
     /// LOD preset to use
     #[serde(default = "default_lod_preset")]
@@ -263,6 +272,7 @@ pub struct LodConfig {
 
 /// Individual LOD level definition.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LodLevel {
     /// LOD index (0 = highest quality)
     pub index: u32,
@@ -314,6 +324,7 @@ pub enum PlatformTarget {
 
 /// Platform-specific optimization configuration.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct PlatformConfig {
     /// Target platform
     #[serde(default = "default_platform")]
@@ -1249,6 +1260,18 @@ scientific = "Test"
 [trunk]
 "#;
         assert!(Species::from_toml(missing_name).is_err());
+    }
+
+    #[test]
+    fn test_unknown_keys_rejected() {
+        // A typoed key must fail loudly rather than silently falling back to defaults.
+        let typo = r#"
+[species]
+name = "Oak"
+[trunk]
+hieght = 6.0
+"#;
+        assert!(Species::from_toml(typo).is_err());
     }
 
     #[test]

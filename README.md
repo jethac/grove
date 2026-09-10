@@ -1,51 +1,47 @@
 # Grove
 
-A procedural tree generator for real-time game engines. Generates 3D tree meshes with LOD support, wind animation data, and exports to glTF 2.0.
+A procedural tree generator for real-time game engines. Generates 3D tree
+meshes with LOD support and Pivot Painter wind data, and exports to glTF 2.0.
+Ships as a Rust library, a CLI, a browser/desktop workbench, and a C FFI for
+engine plugins.
 
 ## Features
 
-- **Weber-Penn branching algorithm** - Biologically-inspired recursive branching with configurable parameters
-- **Multiple LOD levels** - Automatic generation of level-of-detail meshes with configurable triangle budgets
-- **Leaf systems** - Polygon, cross-billboard, and billboard leaf geometries
-- **Pivot Painter 2.0** - Wind animation vertex data compatible with Unreal Engine 5
-- **glTF 2.0 export** - Binary (.glb) or JSON (.gltf) output with PBR materials
-- **Species presets** - Oak, Pine, Palm, and Willow included
+- **Weber–Penn branching algorithm** — biologically-inspired recursive branching with configurable parameters
+- **Multiple LOD levels** — configurable triangle budgets per level
+- **Leaf systems** — polygon, cross-billboard, and billboard leaf geometries
+- **Pivot Painter 2.0** — wind animation vertex data compatible with Unreal Engine 5
+- **glTF 2.0 export** — binary `.glb` or `.gltf` + `.bin` with PBR materials
+- **Workbench app** — React/Tauri editor for species parameters, LOD previews, and export
+- **Species presets** — Oak, Pine, Palm, and Willow included
 
-## Installation
+## Quick start
 
-### From source
+### Requirements
+
+- Rust stable (edition 2024), `wasm32-unknown-unknown` target for engine changes
+- Node ≥ 24, wasm-pack (only to rebuild `apps/desktop/src/wasm`)
+- Tauri 2 prerequisites for `npm run desktop` (WebView2 on Windows)
+
+### Workbench (interactive editor)
 
 ```bash
-git clone https://github.com/splatterfacegames/midori.git
-cd midori
-cargo build --release
+npm ci                  # installs deps, incl. the pinned jethaforge stack build
+npm run dev             # http://127.0.0.1:1420
+npm run desktop         # native Tauri window (dev)
+npm run desktop:build   # packaged installer
 ```
 
-The binary will be at `target/release/grove`.
+The workbench edits species parameters, previews every LOD in 3D, manages
+seeded variants, and exports `.glb`/`.gltf`. See [docs/workbench.md](docs/workbench.md).
 
-## Usage
-
-### Generate a tree
-
-```bash
-grove generate -s presets/species/oak.toml -o tree.glb
-```
-
-### Generate multiple variants
+### CLI
 
 ```bash
-grove generate -s presets/species/pine.toml -n 10 --seed 42 -o forest/pine.glb
-```
-
-Output files will be named `pine_0.glb`, `pine_1.glb`, etc.
-
-### Show species information
-
-```bash
+cargo build --release -p grove-cli
+grove generate -s presets/species/oak.toml -o tree.glb --seed 42
 grove info -s presets/species/willow.toml
 ```
-
-### Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -55,22 +51,48 @@ grove info -s presets/species/willow.toml
 | `--seed <N>` | Random seed | random |
 | `--lod <all\|0\|1\|2\|3>` | LOD level(s) to export | `all` |
 | `--format <glb\|gltf>` | Output format | `glb` |
-| `--lod-preset <PRESET>` | LOD quality preset | `balanced` |
+| `--lod-preset <PRESET>` | LOD quality preset | species `[lod]` |
 | `-v, --verbose` | Verbose output | off |
 
-### LOD Presets
+### Library
 
-| Preset | Levels | Max Triangles |
-|--------|--------|---------------|
-| `ultra` | 5 | 50,000 |
-| `high_quality` | 4 | 30,000 |
-| `balanced` | 3 | 8,000 |
-| `mobile` | 3 | 3,000 |
-| `minimal` | 2 | 1,500 |
+```rust
+use grove_core::{Species, generate_tree, generate_lod_meshes, export_lod_meshes, ExportConfig};
+use std::path::Path;
 
-## Species Files
+let species = Species::from_file(Path::new("oak.toml"))?;
+let tree = generate_tree(&species, 12345);
+let lods = generate_lod_meshes(&tree, &species);
+export_lod_meshes(&lods, Path::new("tree.glb"), &ExportConfig::default())?;
+```
 
-Trees are defined in TOML files. Example:
+## Project structure
+
+```
+midori/
+├── crates/
+│   ├── grove-core/     # Generation engine: species TOML -> tree -> LODs -> glTF
+│   ├── grove-cli/      # `grove` command-line binary
+│   ├── grove-wasm/     # wasm-bindgen bindings for the workbench webview
+│   ├── grove-ffi/      # C ABI for engine plugins (parse/generate/export)
+│   └── grove-desktop/  # Tauri 2 host (windowing + bounded file commands)
+├── apps/desktop/       # React 19 + Vite workbench on the jethaforge stack
+│   └── src/wasm/       # Committed wasm-pack build (`npm run wasm` to rebuild)
+├── presets/species/    # Authoritative species TOML documents
+├── docs/               # architecture.md, workbench.md, species-format.md
+└── scripts/            # build-wasm.mjs, desktop.mjs, make-icon.mjs
+```
+
+Architecture details live in [docs/architecture.md](docs/architecture.md).
+The shared UI stack is
+[`splatterfacegames/jethaforge`](https://github.com/splatterfacegames/jethaforge)
+(pinned by git revision in `package.json`); the desktop app is Python-free —
+build, test, package, and launch need only Rust, Node, and the Tauri toolchain.
+
+## Species files
+
+Trees are defined in TOML. The same documents drive the CLI, the WASM engine,
+and the FFI surface:
 
 ```toml
 [species]
@@ -99,71 +121,79 @@ offset = 0.35
 count = 3000
 size = 0.12
 geometry = "cross_billboard"
+
+[lod]
+preset = "balanced"
+
+[platform]
+target = "modern_pc"
 ```
 
-See `presets/species/` for complete examples.
+See `presets/species/` for complete examples and
+[docs/species-format.md](docs/species-format.md) for the full reference.
 
-### Crown Shapes
+### Crown shapes
 
-- `spherical` - Round, spreading crown (oak, maple)
-- `conical` - Triangular profile (pine, spruce)
-- `hemispherical` - Dome-shaped (palm)
-- `flame` - Pointed oval (cypress)
-- `columnar` - Tall and narrow (poplar)
+`spherical` (oak, maple) · `conical` (pine, spruce) · `hemispherical` (palm) ·
+`flame` (cypress) · `columnar` (poplar)
 
-### Leaf Geometries
+### Leaf geometries
 
-- `polygon` - Actual leaf-shaped mesh, no alpha testing needed
-- `cross_billboard` - Two quads at 90°, good balance of quality/performance
-- `billboard` - Single quad, cheapest option
-- `none` - No leaves (used for lowest LOD)
+- `polygon` — leaf-shaped mesh, no alpha test needed
+- `cross_billboard` — two quads at 90°, quality/performance balance
+- `billboard` — single quad, cheapest
+- `none` — no leaves (lowest LOD)
 
-## Output Format
+### LOD presets
 
-Grove exports glTF 2.0 with:
+| Preset | Levels | Max triangles |
+|--------|--------|---------------|
+| `ultra` | 5 | 50,000 |
+| `high_quality` | 4 | 30,000 |
+| `balanced` | 3 | 8,000 |
+| `mobile` | 3 | 3,000 |
+| `minimal` | 2 | 1,500 |
 
-- Multiple meshes (one per LOD level)
-- Vertex attributes: `POSITION`, `NORMAL`, `TEXCOORD_0`, `TEXCOORD_1`, `COLOR_0`
-- PBR materials for bark and leaves
-- Pivot Painter data encoded in `TEXCOORD_1` and `COLOR_0`
+`preset = "custom"` reads explicit `[[lod.levels]]` entries instead.
 
-### Pivot Painter Data
+## Output format
 
-For wind animation in game engines:
+Grove exports glTF 2.0 with one mesh per LOD level and attributes
+`POSITION`, `NORMAL`, `TEXCOORD_0`, `TEXCOORD_1`, `COLOR_0` plus bark/leaf
+primitive materials.
+
+### Pivot Painter data
 
 | Attribute | Channel | Data |
 |-----------|---------|------|
-| `TEXCOORD_1.x` | U | Branch depth (0=trunk, 1=leaf) |
+| `TEXCOORD_1.x` | U | Branch depth (0 = trunk, 1 = leaf) |
 | `TEXCOORD_1.y` | V | Phase offset |
 | `COLOR_0.xyz` | RGB | Pivot position (normalized) |
-| `COLOR_0.w` | A | Stiffness (0=flexible, 1=rigid) |
+| `COLOR_0.w` | A | Stiffness (0 = flexible, 1 = rigid) |
 
-## Project Structure
+## Development
 
+```bash
+cargo fmt --all -- --check                # formatting
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace                    # 140+ tests
+npm run typecheck                         # tsc --noEmit
+npm test                                  # vitest (model + mesh tests run the real WASM engine)
+npm run build                             # production web build -> dist/
+npm run wasm                              # rebuild committed WASM bundle
+npm run desktop:build                     # Tauri package (NSIS on Windows)
 ```
-grove/
-├── crates/
-│   ├── grove-core/     # Core generation library
-│   ├── grove-cli/      # Command-line interface
-│   ├── grove-wasm/     # WebAssembly bindings (WIP)
-│   └── grove-ffi/      # C FFI for engine plugins (WIP)
-└── presets/
-    └── species/        # Species TOML files
-```
 
-## Library Usage
+CI (`.github/workflows/ci.yml`) runs the Rust suite, a wasm32 compile check,
+and the app typecheck/test/build on every PR.
 
-```rust
-use grove_core::{Species, generate_tree, generate_lod_meshes, export_lod_meshes, ExportConfig};
-use std::path::Path;
+### Engine plugin FFI
 
-let species = Species::from_file(Path::new("oak.toml")).unwrap();
-let tree = generate_tree(&species, 12345);
-let lods = generate_lod_meshes(&tree, &species);
-
-export_lod_meshes(&lods, Path::new("tree.glb"), &ExportConfig::default()).unwrap();
-```
+`grove-ffi` builds a `cdylib`/`staticlib` C API:
+`grove_species_parse` → `grove_tree_generate` → `grove_tree_export_glb` →
+`grove_tree_free` / `grove_species_free`. Handles are opaque pointers; strings
+are `(ptr, len)` UTF-8 pairs.
 
 ## License
 
-MIT
+MIT OR Apache-2.0
