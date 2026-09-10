@@ -1,6 +1,6 @@
 //! glTF 2.0 export for tree meshes.
 
-use crate::{mesh::Submesh, LodMeshSet, Mesh};
+use crate::{LodMeshSet, Mesh, mesh::Submesh};
 use std::io::Write;
 use std::path::Path;
 
@@ -93,7 +93,10 @@ pub fn export_lod_meshes(
 }
 
 /// Export LOD mesh set to GLB bytes (for WASM/in-memory use)
-pub fn export_lod_meshes_to_bytes(lods: &LodMeshSet, config: &ExportConfig) -> Result<Vec<u8>, ExportError> {
+pub fn export_lod_meshes_to_bytes(
+    lods: &LodMeshSet,
+    config: &ExportConfig,
+) -> Result<Vec<u8>, ExportError> {
     if lods.meshes.is_empty() {
         return Err(ExportError::NoMeshes);
     }
@@ -619,10 +622,10 @@ fn write_gltf_separate(path: &Path, data: &GltfData) -> Result<(), std::io::Erro
 
     // Update JSON to reference external buffer
     let mut json = data.json.clone();
-    if let Some(buffers) = json.get_mut("buffers").and_then(|b| b.as_array_mut()) {
-        if let Some(buffer) = buffers.first_mut() {
-            buffer["uri"] = serde_json::Value::String(bin_filename.clone());
-        }
+    if let Some(buffers) = json.get_mut("buffers").and_then(|b| b.as_array_mut())
+        && let Some(buffer) = buffers.first_mut()
+    {
+        buffer["uri"] = serde_json::Value::String(bin_filename.clone());
     }
 
     // Write JSON file
@@ -640,7 +643,7 @@ fn write_gltf_separate(path: &Path, data: &GltfData) -> Result<(), std::io::Erro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{mesh::MaterialType, Vertex};
+    use crate::{Vertex, mesh::MaterialType};
     use glam::{Vec2, Vec3, Vec4};
     use std::fs;
     use tempfile::tempdir;

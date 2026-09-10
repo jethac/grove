@@ -49,6 +49,5 @@ pub unsafe extern "C" fn grove_tree_free(_handle: GroveTreeHandle) {
 /// Get the version string of the grove library.
 #[unsafe(no_mangle)]
 pub extern "C" fn grove_version() -> *const std::ffi::c_char {
-    // Include null terminator
-    b"0.1.0\0".as_ptr() as *const std::ffi::c_char
+    c"0.1.0".as_ptr()
 }

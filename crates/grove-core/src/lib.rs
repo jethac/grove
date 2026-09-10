@@ -40,15 +40,18 @@ pub mod species;
 pub mod tree;
 
 pub use constants::*;
-pub use export::{export_lod_meshes, export_lod_meshes_to_bytes, export_mesh, ExportConfig, ExportError, ExportFormat};
+pub use export::{
+    ExportConfig, ExportError, ExportFormat, export_lod_meshes, export_lod_meshes_to_bytes,
+    export_mesh,
+};
 pub use generation::generate_tree;
-pub use leaves::{add_leaves_to_tree, generate_leaf_mesh, place_leaves, LeafConfig, LeafShape};
+pub use leaves::{LeafConfig, LeafShape, add_leaves_to_tree, generate_leaf_mesh, place_leaves};
 pub use lod::{
-    generate_lod_meshes, generate_lod_meshes_with_config, LodGenerationConfig, LodLevelConfig,
-    LodMesh, LodMeshSet, LodStats,
+    LodGenerationConfig, LodLevelConfig, LodMesh, LodMeshSet, LodStats, generate_lod_meshes,
+    generate_lod_meshes_with_config,
 };
 pub use mesh::{MaterialType, Mesh, Submesh, Vertex};
-pub use mesh_builder::{build_mesh, build_mesh_with_config, MeshBuilder, MeshConfig};
+pub use mesh_builder::{MeshBuilder, MeshConfig, build_mesh, build_mesh_with_config};
 pub use rng::Rng;
 pub use species::Species;
 pub use tree::{BoundingBox, Leaf, Segment, Stem, Tree};

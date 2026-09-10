@@ -13,6 +13,17 @@ use crate::{
 };
 use glam::Vec3;
 
+/// Parameters describing a single branch to generate
+struct BranchSpec<'a> {
+    parent_id: u32,
+    parent_offset: f32,
+    position: Vec3,
+    direction: Vec3,
+    params: &'a BranchParams,
+    length_modifier: f32,
+    level: u8,
+}
+
 /// Generator context for tree creation
 pub struct TreeGenerator<'a> {
     species: &'a Species,
@@ -70,12 +81,8 @@ impl<'a> TreeGenerator<'a> {
             let t = i as f32 / segment_count as f32;
 
             // Calculate curve for this segment
-            let curve_amount = self.calculate_curve(
-                t,
-                trunk.curve,
-                trunk.curve_variance,
-                trunk.curve_back,
-            );
+            let curve_amount =
+                self.calculate_curve(t, trunk.curve, trunk.curve_variance, trunk.curve_back);
 
             // Apply curve rotation
             direction = self.apply_curve(direction, curve_amount, 0.0);
@@ -140,33 +147,33 @@ impl<'a> TreeGenerator<'a> {
             let t = crown_offset + (1.0 - crown_offset) * (i as f32 / count.max(1) as f32);
 
             // Rotation around parent using golden angle
-            let rotation_angle = i as f32 * radians(branch_params.rotation)
-                + self.rng.variance_add(radians(15.0));
+            let rotation_angle =
+                i as f32 * radians(branch_params.rotation) + self.rng.variance_add(radians(15.0));
 
             // Get parent position and direction at this point
             let spawn_pos = parent.point_at(t);
             let parent_dir = parent.direction_at(t);
 
             // Calculate branch direction
-            let branch_angle = radians(
-                branch_params.angle + self.rng.variance_add(branch_params.angle_variance),
-            );
+            let branch_angle =
+                radians(branch_params.angle + self.rng.variance_add(branch_params.angle_variance));
 
-            let branch_dir = self.calculate_branch_direction(parent_dir, branch_angle, rotation_angle);
+            let branch_dir =
+                self.calculate_branch_direction(parent_dir, branch_angle, rotation_angle);
 
             // Apply crown shape modifier
             let length_mod = self.crown_length_modifier(t);
 
             // Generate the branch stem
-            let branch = self.generate_branch(
+            let branch = self.generate_branch(BranchSpec {
                 parent_id,
-                t,
-                spawn_pos,
-                branch_dir,
-                &branch_params,
-                length_mod,
+                parent_offset: t,
+                position: spawn_pos,
+                direction: branch_dir,
+                params: &branch_params,
+                length_modifier: length_mod,
                 level,
-            );
+            });
 
             // Only add branch if it has segments
             if branch.segments.is_empty() {
@@ -186,40 +193,33 @@ impl<'a> TreeGenerator<'a> {
     }
 
     /// Generate a single branch stem
-    fn generate_branch(
-        &mut self,
-        parent_id: u32,
-        parent_offset: f32,
-        position: Vec3,
-        direction: Vec3,
-        params: &BranchParams,
-        length_modifier: f32,
-        level: u8,
-    ) -> Stem {
-        let mut stem = Stem::new(self.next_stem_id(), level);
-        stem.parent_id = Some(parent_id);
-        stem.parent_offset = parent_offset;
+    fn generate_branch(&mut self, spec: BranchSpec<'_>) -> Stem {
+        let mut stem = Stem::new(self.next_stem_id(), spec.level);
+        stem.parent_id = Some(spec.parent_id);
+        stem.parent_offset = spec.parent_offset;
 
         // Calculate branch length with variance and crown modifier
-        let length = params.length * self.rng.variance_mul(params.length_variance) * length_modifier;
+        let length = spec.params.length
+            * self.rng.variance_mul(spec.params.length_variance)
+            * spec.length_modifier;
 
         if length < MIN_LENGTH {
             return stem;
         }
 
         // Get parent radius at spawn point
-        let parent = match self.tree.get_stem(parent_id) {
+        let parent = match self.tree.get_stem(spec.parent_id) {
             Some(p) => p,
             None => return stem,
         };
-        let parent_radius = parent.radius_at(parent_offset);
+        let parent_radius = parent.radius_at(spec.parent_offset);
 
-        let segment_count = params.segments.max(2);
+        let segment_count = spec.params.segments.max(2);
         let segment_length = length / segment_count as f32;
 
-        let mut pos = position;
-        let mut dir = direction;
-        let mut radius = parent_radius * params.radius_ratio;
+        let mut pos = spec.position;
+        let mut dir = spec.direction;
+        let mut radius = parent_radius * spec.params.radius_ratio;
 
         // Default branch taper
         let taper = 0.7;
@@ -228,10 +228,11 @@ impl<'a> TreeGenerator<'a> {
             let t = i as f32 / segment_count as f32;
 
             // Calculate curve with variance
-            let curve_amount = self.calculate_curve(t, params.curve, params.curve_variance, 0.0);
+            let curve_amount =
+                self.calculate_curve(t, spec.params.curve, spec.params.curve_variance, 0.0);
 
             // Apply gravity influence
-            let gravity_influence = params.gravity * segment_length;
+            let gravity_influence = spec.params.gravity * segment_length;
 
             dir = self.apply_curve_and_gravity(dir, curve_amount, gravity_influence);
 

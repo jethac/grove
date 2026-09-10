@@ -175,12 +175,13 @@ pub enum LeafDistribution {
 }
 
 /// Leaf rendering geometry type.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LeafGeometry {
     /// Full polygon mesh leaves
     Polygon,
     /// Two crossed billboard quads
+    #[default]
     CrossBillboard,
     /// Single camera-facing billboard
     Billboard,
@@ -422,12 +423,6 @@ impl Default for PlatformConfig {
         Self {
             target: default_platform(),
         }
-    }
-}
-
-impl Default for LeafGeometry {
-    fn default() -> Self {
-        LeafGeometry::CrossBillboard
     }
 }
 
@@ -951,7 +946,10 @@ shape = "{}"
             CrownShape::Conical
         );
         assert_eq!(
-            Species::from_toml(&toml("hemispherical")).unwrap().crown.shape,
+            Species::from_toml(&toml("hemispherical"))
+                .unwrap()
+                .crown
+                .shape,
             CrownShape::Hemispherical
         );
         assert_eq!(
@@ -1018,7 +1016,10 @@ geometry = "{}"
         };
 
         assert_eq!(
-            Species::from_toml(&toml("polygon")).unwrap().leaves.geometry,
+            Species::from_toml(&toml("polygon"))
+                .unwrap()
+                .leaves
+                .geometry,
             LeafGeometry::Polygon
         );
         assert_eq!(
@@ -1061,7 +1062,10 @@ preset = "{}"
             LodPreset::Ultra
         );
         assert_eq!(
-            Species::from_toml(&toml("high_quality")).unwrap().lod.preset,
+            Species::from_toml(&toml("high_quality"))
+                .unwrap()
+                .lod
+                .preset,
             LodPreset::HighQuality
         );
         assert_eq!(

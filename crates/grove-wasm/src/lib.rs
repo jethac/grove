@@ -11,10 +11,8 @@
 //! - Real-time parameter adjustment with immediate preview
 
 use grove_core::{
-    export_lod_meshes_to_bytes,
-    generate_tree as core_generate_tree,
-    lod::{generate_lod_meshes_with_config, LodGenerationConfig},
-    ExportConfig, Mesh, Species,
+    ExportConfig, Mesh, Species, export_lod_meshes_to_bytes, generate_tree as core_generate_tree,
+    lod::{LodGenerationConfig, generate_lod_meshes_with_config},
 };
 use wasm_bindgen::prelude::*;
 

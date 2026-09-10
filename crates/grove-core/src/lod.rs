@@ -4,7 +4,7 @@
 //! quality levels for efficient rendering at different distances.
 
 use crate::{
-    leaves::{generate_leaf_mesh, LeafConfig},
+    leaves::{LeafConfig, generate_leaf_mesh},
     mesh::{MaterialType, Mesh},
     mesh_builder::{MeshBuilder, MeshConfig},
     species::{LeafGeometry, LodLevel, LodPreset, Species},
@@ -714,7 +714,11 @@ preset = "balanced"
 
         // Each LOD should have geometry
         for lod in &lod_set.meshes {
-            assert!(!lod.mesh.is_empty(), "LOD {} should have geometry", lod.index);
+            assert!(
+                !lod.mesh.is_empty(),
+                "LOD {} should have geometry",
+                lod.index
+            );
         }
     }
 

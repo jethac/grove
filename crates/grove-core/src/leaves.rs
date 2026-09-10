@@ -55,22 +55,17 @@ impl LeafConfig {
 }
 
 /// Leaf shape for polygon generation using SDF
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum LeafShape {
     /// Elliptical leaf shape (common in many trees)
     Oval,
     /// Egg-shaped leaf, narrower at tip
+    #[default]
     Pointed,
     /// Oak-style leaf with wavy edges
     Lobed,
     /// Long thin needle (pine, spruce)
     Needle,
-}
-
-impl Default for LeafShape {
-    fn default() -> Self {
-        LeafShape::Pointed
-    }
 }
 
 /// Place leaves on the tree structure
@@ -151,11 +146,7 @@ fn calculate_stem_weight(stem: &Stem, distribution: LeafDistribution) -> f32 {
     match distribution {
         LeafDistribution::Endpoint => {
             // Only terminal branches get leaves
-            if stem.child_ids.is_empty() {
-                1.0
-            } else {
-                0.0
-            }
+            if stem.child_ids.is_empty() { 1.0 } else { 0.0 }
         }
         LeafDistribution::AlongBranch => {
             // Weight by branch length

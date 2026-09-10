@@ -16,8 +16,8 @@ A procedural tree generator for real-time game engines. Generates 3D tree meshes
 ### From source
 
 ```bash
-git clone https://github.com/jethac/grove.git
-cd grove
+git clone https://github.com/splatterfacegames/midori.git
+cd midori
 cargo build --release
 ```
 
