@@ -50,13 +50,13 @@ jobs:
           node-version: 24.15.0
           cache: npm
       # The jethaforge stack dep is a private git repository. The lockfile
-      # resolved it as git+ssh://; rewrite to token-authenticated https so
-      # `npm ci` (and any nested git ls-remote) can read it.
+      # resolved it as git+ssh://; rewrite to https and supply credentials via
+      # a helper so `npm ci`'s nested `git ls-remote` can read it.
       - name: Configure git auth for private jethaforge dep
         run: |
-          git config --global \
-            url."https://x-access-token:${{ secrets.JETHAFORGE_TOKEN }}@github.com/".insteadOf \
-            "ssh://git@github.com/"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global credential.helper \
+            '!f() { echo "username=x-access-token"; echo "password=${{ secrets.JETHAFORGE_TOKEN }}"; }; f'
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
