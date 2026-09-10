@@ -176,13 +176,18 @@ primitive materials.
 ```bash
 cargo fmt --all -- --check                # formatting
 cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace                    # 140+ tests
+cargo test --workspace                    # 140+ tests (engine, CLI, WASM, FFI)
+cargo test --manifest-path crates/grove-desktop/Cargo.toml  # desktop shell tests
 npm run typecheck                         # tsc --noEmit
 npm test                                  # vitest (model + mesh tests run the real WASM engine)
 npm run build                             # production web build -> dist/
 npm run wasm                              # rebuild committed WASM bundle
 npm run desktop:build                     # Tauri package (NSIS on Windows)
 ```
+
+`grove-desktop` is a standalone crate (excluded from the workspace) because it
+consumes the private `jethaforge` git dependency; the engine workspace resolves
+and builds with no private credentials required.
 
 CI (`.github/workflows/ci.yml`) runs the Rust suite, a wasm32 compile check,
 and the app typecheck/test/build on every PR.

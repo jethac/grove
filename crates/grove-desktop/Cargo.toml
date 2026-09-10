@@ -1,8 +1,8 @@
 [package]
 name = "grove-desktop"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
 description = "Tauri desktop shell for the Grove workbench"
 build = "build.rs"
 
@@ -26,3 +26,8 @@ tauri-build = { version = "2", features = [] }
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
+
+# The Tauri/webview dependency tree is very large under full debuginfo; trim
+# dependency symbols so dev builds stay usable on shared build machines.
+[profile.dev.package."*"]
+debug = "line-tables-only"

@@ -11,6 +11,8 @@ midori/
 │   ├── grove-wasm/      # wasm-bindgen bindings used by the workbench webview
 │   ├── grove-ffi/       # C API for engine plugins (cdylib/staticlib)
 │   └── grove-desktop/   # Tauri 2 host: windowing + bounded file commands
+│                        #   (standalone crate — excluded from the workspace so the
+│                        #    engine builds without the private jethaforge dep)
 ├── apps/desktop/        # React 19 + Vite workbench UI (jethaforge stack)
 │   └── src/wasm/        # Committed wasm-pack build of grove-wasm
 ├── presets/species/     # Authoritative species TOML documents
