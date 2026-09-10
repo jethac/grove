@@ -7,12 +7,15 @@
 //! # Features
 //!
 //! - Generate trees directly in the browser
-//! - Multiple LOD levels for efficient rendering
-//! - Real-time parameter adjustment with immediate preview
+//! - Multiple LOD levels for efficient rendering (driven by the species' `[lod]` config)
+//! - Species parameters round-trip between JSON (editors) and TOML (document authority)
+//! - glTF 2.0 export as single-file GLB or `.gltf` + `.bin` parts
 
 use grove_core::{
-    ExportConfig, Mesh, Species, export_lod_meshes_to_bytes, generate_tree as core_generate_tree,
+    ExportConfig, Mesh, Species, export_lod_meshes_to_bytes, export_lod_meshes_to_parts,
+    generate_tree as core_generate_tree,
     lod::{LodGenerationConfig, generate_lod_meshes_with_config},
+    mesh::MaterialType,
 };
 use wasm_bindgen::prelude::*;
 
@@ -24,8 +27,8 @@ pub fn init() {
 
 /// Tree generator that holds a parsed species definition.
 ///
-/// Create a generator from a TOML string, then use it to generate
-/// trees with different seeds.
+/// Create a generator from a TOML string or a JSON species object, then use it
+/// to generate trees with different seeds.
 #[wasm_bindgen]
 pub struct GroveGenerator {
     species: Species,
@@ -41,6 +44,34 @@ impl GroveGenerator {
         Ok(Self { species })
     }
 
+    /// Create a new generator from a species JSON object.
+    ///
+    /// Accepts the same shape produced by `toJson()`, so editors can mutate the
+    /// object and round-trip it through the engine for validation.
+    #[wasm_bindgen(js_name = fromJson)]
+    pub fn from_json(value: JsValue) -> Result<GroveGenerator, JsValue> {
+        let species = serde_wasm_bindgen::from_value::<Species>(value)
+            .map_err(|e| JsValue::from_str(&format!("Invalid species: {}", e)))?;
+        Ok(Self { species })
+    }
+
+    /// Return the species definition as a plain JS object.
+    ///
+    /// All defaulted fields are present in the output, so editors can render
+    /// every parameter without knowing the defaults.
+    #[wasm_bindgen(js_name = toJson)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(&self.species)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Serialize the species definition back to TOML.
+    #[wasm_bindgen(js_name = toToml)]
+    pub fn to_toml(&self) -> Result<String, JsValue> {
+        toml::to_string_pretty(&self.species)
+            .map_err(|e| JsValue::from_str(&format!("TOML serialization error: {}", e)))
+    }
+
     /// Get the species name.
     #[wasm_bindgen(getter)]
     pub fn name(&self) -> String {
@@ -50,15 +81,12 @@ impl GroveGenerator {
     /// Generate a tree and return mesh data as a JavaScript object.
     ///
     /// Returns an object containing all LOD levels with their mesh data.
+    /// LOD generation is driven by the species' `[lod]` configuration.
     #[wasm_bindgen]
     pub fn generate(&self, seed: u64) -> Result<JsValue, JsValue> {
         let tree = core_generate_tree(&self.species, seed);
+        let lods = self.generate_lods(&tree);
 
-        // Generate LOD meshes using balanced config
-        let lod_config = LodGenerationConfig::balanced();
-        let lods = generate_lod_meshes_with_config(&tree, &self.species, &lod_config);
-
-        // Convert to JS-friendly format
         let result = MeshOutput::from_lods(&lods);
         serde_wasm_bindgen::to_value(&result)
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
@@ -68,9 +96,7 @@ impl GroveGenerator {
     #[wasm_bindgen]
     pub fn generate_lod(&self, seed: u64, lod_level: u32) -> Result<JsValue, JsValue> {
         let tree = core_generate_tree(&self.species, seed);
-
-        let lod_config = LodGenerationConfig::balanced();
-        let lods = generate_lod_meshes_with_config(&tree, &self.species, &lod_config);
+        let lods = self.generate_lods(&tree);
 
         if let Some(lod) = lods.get(lod_level) {
             let result = SingleMeshOutput::from_mesh(&lod.mesh, &lod.name);
@@ -108,20 +134,43 @@ impl GroveGenerator {
     #[wasm_bindgen]
     pub fn export_glb(&self, seed: u64) -> Result<js_sys::Uint8Array, JsValue> {
         let tree = core_generate_tree(&self.species, seed);
+        let lods = self.generate_lods(&tree);
 
-        // Generate LOD meshes
-        let lod_config = LodGenerationConfig::balanced();
-        let lods = generate_lod_meshes_with_config(&tree, &self.species, &lod_config);
-
-        // Export to GLB bytes
         let config = ExportConfig::default();
         let glb_bytes = export_lod_meshes_to_bytes(&lods, &config)
             .map_err(|e| JsValue::from_str(&format!("Export error: {}", e)))?;
 
-        // Convert to JS Uint8Array
         let array = js_sys::Uint8Array::new_with_length(glb_bytes.len() as u32);
         array.copy_from(&glb_bytes);
         Ok(array)
+    }
+
+    /// Export tree as separate `.gltf` JSON + `.bin` parts.
+    ///
+    /// `bin_name` is written into the glTF buffer URI. Returns an object with
+    /// `gltf` and `bin` Uint8Array fields.
+    #[wasm_bindgen(js_name = exportGltf)]
+    pub fn export_gltf(&self, seed: u64, bin_name: &str) -> Result<JsValue, JsValue> {
+        let tree = core_generate_tree(&self.species, seed);
+        let lods = self.generate_lods(&tree);
+
+        let config = ExportConfig::default();
+        let (gltf, bin) = export_lod_meshes_to_parts(&lods, bin_name, &config)
+            .map_err(|e| JsValue::from_str(&format!("Export error: {}", e)))?;
+
+        let result = js_sys::Object::new();
+        let gltf_array = js_sys::Uint8Array::new_with_length(gltf.len() as u32);
+        gltf_array.copy_from(&gltf);
+        let bin_array = js_sys::Uint8Array::new_with_length(bin.len() as u32);
+        bin_array.copy_from(&bin);
+        js_sys::Reflect::set(&result, &"gltf".into(), &gltf_array)?;
+        js_sys::Reflect::set(&result, &"bin".into(), &bin_array)?;
+        Ok(result.into())
+    }
+
+    fn generate_lods(&self, tree: &grove_core::Tree) -> grove_core::LodMeshSet {
+        let lod_config = LodGenerationConfig::from_species(&self.species);
+        generate_lod_meshes_with_config(tree, &self.species, &lod_config)
     }
 }
 
@@ -148,6 +197,8 @@ struct LodOutput {
     name: String,
     vertices: VertexData,
     indices: Vec<u32>,
+    /// Material ranges over `indices`, for split bark/leaf rendering.
+    submeshes: Vec<SubmeshOutput>,
     vertex_count: u32,
     triangle_count: u32,
 }
@@ -158,8 +209,17 @@ struct SingleMeshOutput {
     name: String,
     vertices: VertexData,
     indices: Vec<u32>,
+    submeshes: Vec<SubmeshOutput>,
     vertex_count: u32,
     triangle_count: u32,
+}
+
+/// A material range over the index buffer.
+#[derive(serde::Serialize)]
+struct SubmeshOutput {
+    index_start: u32,
+    index_count: u32,
+    material: &'static str,
 }
 
 /// Vertex attribute data in flat arrays for WebGL/WebGPU.
@@ -196,6 +256,7 @@ impl MeshOutput {
                     name: lod.name.clone(),
                     vertices: VertexData::from_mesh(&lod.mesh),
                     indices: lod.mesh.indices.clone(),
+                    submeshes: submesh_outputs(&lod.mesh),
                     vertex_count: lod.stats.vertex_count,
                     triangle_count: lod.stats.triangle_count,
                 })
@@ -210,10 +271,25 @@ impl SingleMeshOutput {
             name: name.to_string(),
             vertices: VertexData::from_mesh(mesh),
             indices: mesh.indices.clone(),
+            submeshes: submesh_outputs(mesh),
             vertex_count: mesh.vertices.len() as u32,
             triangle_count: (mesh.indices.len() / 3) as u32,
         }
     }
+}
+
+fn submesh_outputs(mesh: &Mesh) -> Vec<SubmeshOutput> {
+    mesh.submeshes
+        .iter()
+        .map(|sub| SubmeshOutput {
+            index_start: sub.index_start,
+            index_count: sub.index_count,
+            material: match sub.material {
+                MaterialType::Bark => "bark",
+                MaterialType::Leaves => "leaves",
+            },
+        })
+        .collect()
 }
 
 impl VertexData {

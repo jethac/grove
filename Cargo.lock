@@ -555,6 +555,7 @@ name = "grove-ffi"
 version = "0.1.0"
 dependencies = [
  "grove-core",
+ "tempfile",
 ]
 
 [[package]]
@@ -566,6 +567,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde-wasm-bindgen",
+ "toml",
  "wasm-bindgen",
  "web-sys",
 ]
